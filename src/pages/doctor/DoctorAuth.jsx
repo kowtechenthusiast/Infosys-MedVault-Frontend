@@ -1,10 +1,12 @@
 import { useState } from "react";
 import DOCTOR_IMAGE_URL from "../../assets/doctor.jpg";
+import { useNavigate } from "react-router-dom";
 
 export default function DoctorAuth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
 
+  const navigate = useNavigate();
   // Form fields
   const [form, setForm] = useState({
     fullName: "",
@@ -42,7 +44,7 @@ export default function DoctorAuth() {
       confirmPassword: "",
       licenseFile: null,
     });
-    setIsLogin(!isLogin);
+    setCurrent((prev) => (prev === "login" ? "register" : "login"));
   };
 
   // API base URL
@@ -53,7 +55,7 @@ export default function DoctorAuth() {
     setMessage("");
 
     try {
-      if (!isLogin) {
+      if (current == "register") {
         // Registration password match check
         if (form.password !== form.confirmPassword) {
           setMessage("Passwords do not match!");
@@ -77,22 +79,25 @@ export default function DoctorAuth() {
         }
 
         setMessage("Registration submitted for verification!");
-        setIsLogin(true);
-        return;
+        switchForm();
+      } else if (current == "login") {
+        const res = await fetch(`${API_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: form.email, password: form.password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) return setMessage(data.message || "Invalid login");
+
+        localStorage.setItem("doctorToken", data.token);
+        setMessage("Login successful!");
+
+        if (data.status == "PENDING") navigate("/doctor/pending");
+        else navigate("/doctor/dashboard");
       }
 
       // LOGIN
-      const res = await fetch(`${API_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) return setMessage(data.message || "Invalid login");
-
-      localStorage.setItem("doctorToken", data.token);
-      setMessage("Login successful!");
     } catch (err) {
       setMessage("Server error. Try again later.");
       console.error(err);
@@ -138,7 +143,9 @@ export default function DoctorAuth() {
         {/* RIGHT FORM SIDE */}
         <div className="lg:w-1/2 p-10 flex flex-col justify-center">
           <h2 className="text-4xl font-extrabold text-blue-800 mb-10 text-center font-poppins">
-            {isLogin ? "Welcome Back" : "Create Your Professional Account"}
+            {current == "login"
+              ? "Welcome Back"
+              : "Create Your Professional Account"}
           </h2>
 
           {message && (
@@ -149,7 +156,7 @@ export default function DoctorAuth() {
 
           <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
             {/* REGISTRATION FIELDS */}
-            {!isLogin ? (
+            {current == "register" ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Basic Fields */}
@@ -354,17 +361,19 @@ export default function DoctorAuth() {
             )}
 
             <button type="submit" className={primaryButtonStyle}>
-              {isLogin ? "Login Securely" : "Submit for Verification"}
+              {current == "login"
+                ? "Login Securely"
+                : "Submit for Verification"}
             </button>
           </form>
 
           <p className="mt-8 text-center text-gray-700">
-            {isLogin ? "New to MediBook?" : "Already registered?"}{" "}
+            {current == "login" ? "New to MediBook?" : "Already registered?"}{" "}
             <button
               onClick={switchForm}
               className="text-blue-700 font-bold cursor-pointer hover:underline"
             >
-              {isLogin ? "Register Now" : "Login Here"}
+              {current == "login" ? "Register Now" : "Login Here"}
             </button>
           </p>
         </div>

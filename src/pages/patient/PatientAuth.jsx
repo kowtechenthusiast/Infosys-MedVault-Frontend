@@ -125,10 +125,8 @@ export default function PatientAuth() {
 
         if (!res.ok) return setMessage(data.message || "Registration failed");
 
-        setCurrent("login");
-      }
-
-      if (current === "login") {
+        switchForm();
+      } else if (current === "login") {
         const res = await fetch(`${API_URL}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
