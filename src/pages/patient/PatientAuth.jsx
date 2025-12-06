@@ -71,9 +71,9 @@ export default function PatientAuth() {
   const [message, setMessage] = useState("");
 
   const [user, setUser] = useState({
-    name: "",
+    fullName: "",
     age: "",
-    phno: "",
+    phone: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -82,9 +82,9 @@ export default function PatientAuth() {
   const switchForm = () => {
     setMessage("");
     setUser({
-      name: "",
+      fullName: "",
       age: "",
-      phno: "",
+      phone: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -99,7 +99,7 @@ export default function PatientAuth() {
   };
 
   // backend API base URL (change if needed)
-  const API_URL = "http://localhost:5000/api/patient";
+  const API_URL = "http://localhost:8080/patient";
 
   // FORM SUBMIT HANDLER
   const handleSubmit = async (e) => {
@@ -120,6 +120,8 @@ export default function PatientAuth() {
         });
 
         const data = await res.json();
+
+        console.log("Data:", data);
 
         if (!res.ok) return setMessage(data.message || "Registration failed");
 
@@ -146,7 +148,7 @@ export default function PatientAuth() {
       }
     } catch (err) {
       setMessage("Server error. Try again later.");
-      console.error(err);
+      console.error("Error:", err);
     }
   };
 
@@ -198,11 +200,11 @@ export default function PatientAuth() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FloatingInput
-                    name="name"
+                    name="fullName"
                     label="Full Name"
                     type="text"
                     required
-                    value={user.name}
+                    value={user.fullName}
                     onChange={handleChange}
                   />
                   <FloatingInput
@@ -214,11 +216,11 @@ export default function PatientAuth() {
                     onChange={handleChange}
                   />
                   <FloatingInput
-                    name="phno"
+                    name="phone"
                     label="Phone Number"
                     type="tel"
                     required
-                    value={user.phno}
+                    value={user.phone}
                     onChange={handleChange}
                   />
                   <FloatingInput

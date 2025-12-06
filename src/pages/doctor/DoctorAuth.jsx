@@ -8,18 +8,14 @@ export default function DoctorAuth() {
   // Form fields
   const [form, setForm] = useState({
     fullName: "",
-    license: "",
-    clinicName: "",
     gender: "",
-    experience: "",
-    department: "",
+    yearsOfExperience: "",
     specialization: "",
-    phone: "",
+    contactPhone: "",
     email: "",
     password: "",
     confirmPassword: "",
-    consultationType: "",
-    document: null,
+    licenseFile: null,
   });
 
   // Handle text/select inputs
@@ -29,7 +25,7 @@ export default function DoctorAuth() {
 
   // Handle file upload
   const handleFile = (e) => {
-    setForm({ ...form, document: e.target.files[0] });
+    setForm({ ...form, licenseFile: e.target.files[0] });
   };
 
   // Clean switch handler (no useEffect needed)
@@ -38,21 +34,19 @@ export default function DoctorAuth() {
     setForm({
       fullName: "",
       gender: "",
-      experience: "",
-      department: "",
+      yearsOfExperience: "",
       specialization: "",
-      phone: "",
+      contactPhone: "",
       email: "",
       password: "",
       confirmPassword: "",
-      consultationType: "",
-      document: null,
+      licenseFile: null,
     });
     setIsLogin(!isLogin);
   };
 
   // API base URL
-  const API_URL = "http://localhost:5000/api/doctor";
+  const API_URL = "http://localhost:8080/doctor";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -164,7 +158,7 @@ export default function DoctorAuth() {
                       className={inputStyle}
                       required
                       name="fullName"
-                      value={form[name]}
+                      value={form.fullName}
                       onChange={handleChange}
                     />
                     <label className={labelStyle}>Full Name</label>
@@ -194,20 +188,20 @@ export default function DoctorAuth() {
                       type="number"
                       min="0"
                       required
-                      name="experience"
-                      value={form.experience}
+                      name="yearsOfExperience"
+                      value={form.yearsOfExperience}
                       onChange={handleChange}
                     />
                     <label className={labelStyle}>Years of Experience</label>
                   </div>
 
                   {/* Department */}
-                  <div className={inputWrapper}>
+                  {/* <div className={inputWrapper}>
                     <select
                       className={`${inputStyle} bg-white`}
                       required
-                      name="department"
-                      value={form.department}
+                      name="hospitalDepartment"
+                      value={form.hospitalDepartment}
                       onChange={handleChange}
                     >
                       <option value=""></option>
@@ -221,7 +215,7 @@ export default function DoctorAuth() {
                       <option>Orthopedics</option>
                     </select>
                     <label className={labelStyle}>Hospital Department</label>
-                  </div>
+                  </div> */}
 
                   {/* Specialization */}
                   <div className={inputWrapper}>
@@ -255,7 +249,7 @@ export default function DoctorAuth() {
 
                   {/* Contact & Email */}
                   {[
-                    ["phone", "Contact Phone", "tel"],
+                    ["contactPhone", "Contact Phone", "tel"],
                     ["email", "Email Address", "email"],
                   ].map(([name, label, type], i) => (
                     <div className={inputWrapper} key={i}>
@@ -272,7 +266,7 @@ export default function DoctorAuth() {
                   ))}
 
                   {/* Consultation Type */}
-                  <div className={inputWrapper}>
+                  {/* <div className={inputWrapper}>
                     <select
                       className={`${inputStyle} bg-white`}
                       required
@@ -286,7 +280,7 @@ export default function DoctorAuth() {
                       <option>Both In-Person & Online</option>
                     </select>
                     <label className={labelStyle}>Consultation Type</label>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Document Upload */}

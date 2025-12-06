@@ -4,7 +4,7 @@ export default function AdminLogin() {
   const [step, setStep] = useState(2); // 1 = login, 2 = OTP
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-blue-100 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-100 to-blue-100 p-6">
       <div className="w-full max-w-md bg-white/60 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 p-8 animate-fadeIn">
         {/* Title */}
         <h2 className="text-3xl font-bold text-center text-blue-700 tracking-wide mb-6">
