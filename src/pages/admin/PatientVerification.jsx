@@ -1,60 +1,65 @@
-import {
-  Search,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  UserCog,
-} from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useState } from "react";
 // Assuming VerificationCard is the stylized component we updated earlier
 import VerificationCard from "../../components/admin/VerificationCard";
 
-export default function AdminVerification() {
+export default function PatientVerification() {
   // --- Data Definition ---
-  const ALL_ADMIN_REQUESTS = [
+  const ALL_PATIENT_REQUESTS = [
     {
-      id: 1,
-      name: "Naveen Kumar",
+      id: 201,
+      name: "Suresh Gupta",
       status: "PENDING",
-      certificate: "AdminProof22.pdf",
-      role: "Sub-Admin Request",
+      certificate: "Aadhar_9876.pdf",
+      specialization: "Proof of Identity",
+      experience: "DOB: 1985-04-12",
     },
     {
-      id: 2,
-      name: "Riya Verma",
+      id: 202,
+      name: "Alia Bhatt",
       status: "PENDING",
-      certificate: "RVA-Cert-33.pdf",
-      role: "System Analyst",
+      certificate: "License_4567.pdf",
+      specialization: "Proof of Residence",
+      experience: "DOB: 1999-11-20",
     },
     {
-      id: 3,
-      name: "Gaurav Singh",
+      id: 203,
+      name: "Ravi Kishan",
       status: "PENDING",
-      certificate: "GSR-Auth-01.pdf",
-      role: "Auditor",
+      certificate: "VoterID_1234.pdf",
+      specialization: "Proof of Identity",
+      experience: "DOB: 1975-01-01",
     },
-    // Added more mock data to demonstrate pagination
     {
-      id: 4,
-      name: "Pooja Reddy",
+      id: 204,
+      name: "Deepika Padukone",
       status: "PENDING",
-      certificate: "PR-SLA-10.pdf",
-      role: "Compliance Manager",
+      certificate: "Passport_5678.pdf",
+      specialization: "Proof of Residence",
+      experience: "DOB: 1986-07-06",
+    },
+    {
+      id: 205,
+      name: "Rahul Singh",
+      status: "PENDING",
+      certificate: "Aadhar_0011.pdf",
+      specialization: "Proof of Identity",
+      experience: "DOB: 2001-05-15",
     },
   ];
 
   // --- Pagination Logic ---
-  const RECORDS_PER_PAGE = 3; // Display 3 requests per page (adjusted for demonstration)
+  const RECORDS_PER_PAGE = 4;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate total pages
-  const totalRecords = ALL_ADMIN_REQUESTS.length;
+  const totalRecords = ALL_PATIENT_REQUESTS.length;
   const totalPages = Math.ceil(totalRecords / RECORDS_PER_PAGE);
 
   // Get current page data
   const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
   const endIndex = startIndex + RECORDS_PER_PAGE;
-  const currentRequests = ALL_ADMIN_REQUESTS.slice(startIndex, endIndex);
+  const currentRequests = ALL_PATIENT_REQUESTS.slice(startIndex, endIndex);
 
   // Pagination Handlers
   const goToPrevPage = () => {
@@ -71,7 +76,7 @@ export default function AdminVerification() {
       <div className="pb-4 border-b border-slate-50">
         <h2 className="text-3xl font-bold text-slate-800 tracking-tight mb-4">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
-            Admin Role Verification
+            Patient Identity Verification
           </span>
         </h2>
 
@@ -84,22 +89,27 @@ export default function AdminVerification() {
             />
             <input
               type="text"
-              placeholder="Search pending admins by name or role..."
+              placeholder="Search patients by name or ID proof..."
               className="w-full py-2 pl-10 pr-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
             />
           </div>
 
           <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-slate-700 shadow-[0_4px_15px_rgba(30,41,59,0.2)] flex-shrink-0">
             <Filter size={18} />
-            Filter Roles
+            Filter Proof Type
           </button>
         </div>
       </div>
 
       {/* Verification List (Using Paginated Data) */}
       <div className="space-y-6">
-        {currentRequests.map((admin) => (
-          <VerificationCard key={admin.id} data={admin} role="admin" />
+        {currentRequests.map((patient) => (
+          <VerificationCard
+            key={patient.id}
+            data={patient}
+            // Using 'patient' as the role for dynamic card rendering
+            role="patient"
+          />
         ))}
       </div>
 
@@ -109,14 +119,14 @@ export default function AdminVerification() {
           {/* Summary Text (Thematic Update) */}
           <p className="text-sm text-slate-500 flex items-center gap-1">
             <span className="text-slate-800 font-semibold tracking-wide">
-              Access Control:
+              Identity Queue:
             </span>
-            <span className="text-red-600 font-bold">Processing Group</span>
+            <span className="text-red-600 font-bold">Reviewing Block</span>
             <span className="text-slate-700">
               **{startIndex + 1} to {Math.min(endIndex, totalRecords)}**
             </span>
             <span className="text-slate-500">
-              (Total Admins: **{totalRecords}**)
+              (Total Patients: **{totalRecords}**)
             </span>
           </p>
 
