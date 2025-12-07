@@ -27,7 +27,7 @@ export default function DoctorSidebar({ current, setCurrent, userInfo }) {
             className="drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]"
           />
           <span className="text-xl font-bold tracking-wider text-slate-800">
-            MED<span className="text-blue-500">CORE</span>
+            MED<span className="text-blue-500">VAULT</span>
           </span>
         </div>
 

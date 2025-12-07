@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import ChartCard from "../../components/admin/ChartCard"; // Keeping your existing chart component
 import {
@@ -62,13 +63,13 @@ const FuturisticGreeting = ({ name }) => (
         and reduced the negative margin (-mr-8 -mt-8) 
         to prevent horizontal overflow bleed.
     */}
-    <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-blue-100 to-cyan-50 rounded-full blur-3xl -mr-8 -mt-8 opacity-60"></div>
+    <div className="absolute top-0 right-0 w-48 h-48 bg-linear-to-br from-blue-100 to-cyan-50 rounded-full blur-3xl -mr-8 -mt-8 opacity-60"></div>
 
     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
           Good Afternoon,{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 drop-shadow-sm">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-cyan-500 drop-shadow-sm">
             {name}
           </span>
         </h1>
@@ -90,7 +91,7 @@ const FuturisticGreeting = ({ name }) => (
           Next Session
         </p>
         <div className="flex flex-col items-end">
-          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-green-600 drop-shadow-lg transition-all duration-300 hover:scale-[1.02]">
+          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-teal-500 to-green-600 drop-shadow-lg transition-all duration-300 hover:scale-[1.02]">
             {NEXT_APPOINTMENT.time}
           </h3>
           <p className="text-sm font-medium text-slate-600 flex items-center gap-1 mt-1">

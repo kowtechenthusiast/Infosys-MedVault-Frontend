@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import ChartCard from "../../components/admin/ChartCard";
 import { Users, AlertTriangle, Clock, CheckCircle } from "lucide-react"; // Icons for stats
 

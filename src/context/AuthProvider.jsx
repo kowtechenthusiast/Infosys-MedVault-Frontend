@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
-  const [role, setRole] = useState("patient"); // patient, doctor, admin
+  const [role, setRole] = useState(null); // patient, doctor, admin
   const [user, setUser] = useState(null);
 
   // Load token/role on page refresh
