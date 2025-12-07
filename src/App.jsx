@@ -64,7 +64,6 @@ export default function App() {
         <Route path="/doctor/profile" element={<h1>Doctor Profile</h1>} />
         <Route path="/admin/profile" element={<h1>Admin Profile</h1>} />
       </Routes>
-      <Footer />
     </BrowserRouter>
   );
 }

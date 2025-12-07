@@ -1,10 +1,8 @@
 @import "tailwindcss";
-@reference "tailwindcss";
 
-/* Custom component utilities */
 @layer components {
   .input {
-    @apply w-full p-3 border rounded-lg focus:outline-none 
+    @apply w-full p-3 border rounded-lg focus:outline-none
            focus:ring-2 focus:ring-blue-400;
   }
 
