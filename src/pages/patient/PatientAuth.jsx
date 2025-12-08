@@ -1,7 +1,56 @@
 import { useState } from "react";
 import patientImageUrl from "../../assets/patient.jpg";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/useAuthContext";
 
-// Floating Input Component
+// --- NEW OTP Input component for the 5-block input ---
+const OtpInput = ({ otp, setOtp }) => {
+  const inputStyle =
+    "w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg bg-white/70 focus:border-purple-600 outline-none transition";
+
+  const handleChange = (e, index) => {
+    const value = e.target.value;
+
+    if (!/^\d*$/.test(value)) return; // Only allow digits
+
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1); // Take only the last entered digit
+    setOtp(newOtp);
+
+    // Auto-focus to the next input
+    if (value && index < 4) {
+      document.getElementById(`otp-input-${index + 1}`).focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    // Auto-focus to the previous input on backspace if the current field is empty
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-input-${index - 1}`).focus();
+    }
+  };
+
+  return (
+    <div className="flex justify-center space-x-2">
+      {[...Array(5)].map((_, index) => (
+        <input
+          key={index}
+          id={`otp-input-${index}`}
+          type="text"
+          maxLength="1"
+          value={otp[index] || ""}
+          onChange={(e) => handleChange(e, index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          className={inputStyle}
+          required
+        />
+      ))}
+    </div>
+  );
+};
+// ------------------------------------------------------
+
+// Floating Input Component (Unchanged)
 function FloatingInput({
   name,
   label,
@@ -9,6 +58,7 @@ function FloatingInput({
   value,
   onChange,
   required = false,
+  disabled = false, // Added disabled prop
 }) {
   return (
     <div className="relative w-full">
@@ -18,8 +68,9 @@ function FloatingInput({
         value={value}
         onChange={onChange}
         name={name}
+        disabled={disabled} // Apply disabled prop
         className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white/60 backdrop-blur-md
-          peer focus:border-purple-600 focus:ring-2 focus:ring-purple-300 outline-none transition font-medium"
+          peer focus:border-purple-600 focus:ring-2 focus:ring-purple-300 outline-none transition font-medium disabled:bg-gray-100 disabled:cursor-not-allowed"
       />
       <label
         className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm transition-all
@@ -32,6 +83,7 @@ function FloatingInput({
   );
 }
 
+// LoginHelper Component (Unchanged)
 function LoginHelper() {
   return (
     <div className="flex flex-col gap-4 mt-2">
@@ -61,72 +113,125 @@ function LoginHelper() {
       >
         Forgot Password?
       </a>
+      <div className="h-[5px]"></div>
     </div>
   );
 }
 
-// MAIN COMPONENT
 export default function PatientAuth() {
   const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
+  const { setRole } = useAuth();
+  const navigate = useNavigate();
 
+  // --- New OTP states ---
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", ""]); // 5 digits OTP
+
+  // User state updated to only include fields needed for registration/login
   const [user, setUser] = useState({
     fullName: "",
-    age: "",
-    phone: "",
     email: "",
-    password: "",
-    confirmPassword: "",
+    password: "", // Only used for login
   });
 
   const switchForm = () => {
     setMessage("");
+    setIsOtpSent(false); // Reset OTP state
+    setOtp(["", "", "", "", ""]);
     setUser({
       fullName: "",
-      age: "",
-      phone: "",
       email: "",
       password: "",
-      confirmPassword: "",
     });
 
     setCurrent((prev) => (prev === "login" ? "register" : "login"));
   };
 
-  // handle input change
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  // backend API base URL (change if needed)
   const API_URL = "http://localhost:8080/patient";
 
-  // FORM SUBMIT HANDLER
+  // New handler for sending OTP
+  const handleSendOtp = async () => {
+    setMessage("");
+    if (!user.fullName || !user.email) {
+      return setMessage("Full Name and Email are required.");
+    }
+
+    try {
+      // 1. Request OTP/validate email (server checks for duplicate email and sends OTP)
+      const res = await fetch(`${API_URL}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Includes duplicate email check
+        setMessage(data.message || "Failed to send OTP.");
+        return;
+      }
+
+      setMessage("OTP sent to your email. Please check your inbox.");
+      setIsOtpSent(true);
+    } catch (err) {
+      setMessage("Server error during OTP request. Try again later.");
+      console.error(err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
 
     try {
+      // -------------------- REGISTRATION (FINAL STEP) --------------------
       if (current === "register") {
-        if (user.password !== user.confirmPassword) {
-          setMessage("Passwords do not match!");
-          return;
+        if (!isOtpSent) {
+          return handleSendOtp(); // If button is clicked and OTP isn't sent, send it first
         }
 
+        const otpString = otp.join("");
+        if (otpString.length !== 5) {
+          return setMessage("Please enter the 5-digit OTP.");
+        }
+
+        // 2. Validate OTP and Complete Registration
         const res = await fetch(`${API_URL}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(user),
+          body: JSON.stringify({
+            fullName: user.fullName,
+            email: user.email,
+            otp: otpString,
+          }),
         });
 
         const data = await res.json();
 
-        console.log("Data:", data);
+        if (!res.ok) {
+          setMessage(
+            data.message || "OTP validation failed or registration failed."
+          );
+          return;
+        }
 
-        if (!res.ok) return setMessage(data.message || "Registration failed");
+        // 3. Success -> Navigate to pending/success page
+        setMessage(
+          "Registration successful! Your temporary password will be emailed."
+        );
+        navigate("/pending"); // Navigates to a waiting page (e.g., waiting for password email/approval)
+      }
 
-        switchForm();
-      } else if (current === "login") {
+      // ----------------------- LOGIN -----------------------
+      else if (current === "login") {
         const res = await fetch(`${API_URL}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -137,24 +242,30 @@ export default function PatientAuth() {
         });
 
         const data = await res.json();
-        if (!res.ok) return setMessage(data.message || "Invalid credentials");
 
-        setMessage("Login Successful!");
+        if (!res.ok) return setMessage(data.message || "Invalid login");
 
-        // redirect or store token
-        localStorage.setItem("patientToken", data.token);
+        // Revised Login Logic
+        // Assuming the patient login response also has a 'status' or similar field
+        // to handle the post-registration state (e.g., waiting for password)
+        if (data.status === "PENDING") {
+          localStorage.setItem("patientToken", data.token); // Store token for future checks
+          navigate("/pending"); // Redirect to /pending if status is PENDING
+        } else {
+          localStorage.setItem("patientToken", data.token);
+          setMessage("Login Successful!");
+          setRole("patient");
+          navigate("/patient/dashboard"); // Redirect to /dashboard if status is APPROVED/ACTIVE
+        }
       }
     } catch (err) {
       setMessage("Server error. Try again later.");
-      console.error("Error:", err);
+      console.error(err);
     }
   };
 
   const primaryButton =
-    "w-full py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold cursor-pointer rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition";
-
-  const submitButtonClasses =
-    current === "login" ? primaryButton : `mt-[-58px] ${primaryButton}`;
+    "w-full py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold cursor-pointer rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-100 to-pink-100 p-6 font-inter">
@@ -181,9 +292,9 @@ export default function PatientAuth() {
         </div>
 
         {/* RIGHT FORM */}
-        <div className="lg:w-1/2 p-10 flex flex-col justify-center min-h-[600px]">
-          <h2 className="text-4xl font-extrabold text-purple-800 mb-10 text-center font-poppins">
-            {current === "login" ? "Patient Login" : "Create Patient Account"}
+        <div className="lg:w-1/2 p-10 flex flex-col justify-center min-h-[550px]">
+          <h2 className="text-4xl font-extrabold text-purple-800 mb-8 text-center font-poppins">
+            {current === "login" ? "Patient Login" : "Verify Your Email"}
           </h2>
 
           {message && (
@@ -193,64 +304,55 @@ export default function PatientAuth() {
           )}
 
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-            {/* REGISTER FIELDS */}
+            {/* ---------------- REGISTRATION FIELDS ---------------- */}
             {current === "register" && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FloatingInput
-                    name="fullName"
-                    label="Full Name"
-                    type="text"
-                    required
-                    value={user.fullName}
-                    onChange={handleChange}
-                  />
-                  <FloatingInput
-                    name="age"
-                    label="Age"
-                    type="number"
-                    required
-                    value={user.age}
-                    onChange={handleChange}
-                  />
-                  <FloatingInput
-                    name="phone"
-                    label="Phone Number"
-                    type="tel"
-                    required
-                    value={user.phone}
-                    onChange={handleChange}
-                  />
-                  <FloatingInput
-                    name="email"
-                    label="Email Address"
-                    type="email"
-                    required
-                    value={user.email}
-                    onChange={handleChange}
-                  />
-                </div>
+                <FloatingInput
+                  name="fullName"
+                  label="Full Name"
+                  type="text"
+                  required
+                  value={user.fullName}
+                  onChange={handleChange}
+                  disabled={isOtpSent} // Disabled after OTP is sent
+                />
+                {/* Phone removed as per doctor component change to Name & Email only */}
+                <FloatingInput
+                  name="email"
+                  label="Email Address"
+                  type="email"
+                  required
+                  value={user.email}
+                  onChange={handleChange}
+                  disabled={isOtpSent} // Disabled after OTP is sent
+                />
+                {!isOtpSent && (
+                  <button
+                    type="button" // Use type="button" to prevent form submission
+                    className={primaryButton}
+                    onClick={handleSendOtp}
+                  >
+                    Generate & Send OTP
+                  </button>
+                )}
+                {isOtpSent && (
+                  <>
+                    <p className="text-center text-sm text-gray-600 -mt-2">
+                      Enter the 5-digit code sent to{" "}
+                      <strong>{user.email}</strong>
+                    </p>
+                    <OtpInput otp={otp} setOtp={setOtp} />
 
-                <FloatingInput
-                  name="password"
-                  label="Password"
-                  type="password"
-                  required
-                  value={user.password}
-                  onChange={handleChange}
-                />
-                <FloatingInput
-                  name="confirmPassword"
-                  label="Confirm Password"
-                  type="password"
-                  required
-                  value={user.confirmPassword}
-                  onChange={handleChange}
-                />
+                    <button type="submit" className={primaryButton}>
+                      Verify OTP and Register
+                    </button>
+                  </>
+                )}
+                <div className="h-[40px]"></div> {/* height adjustment */}
               </>
             )}
 
-            {/* LOGIN FIELDS */}
+            {/* ---------------- LOGIN FIELDS ---------------- */}
             {current === "login" && (
               <>
                 <FloatingInput
@@ -269,21 +371,15 @@ export default function PatientAuth() {
                   value={user.password}
                   onChange={handleChange}
                 />
+                <LoginHelper />
+                <button type="submit" className={primaryButton}>
+                  Login Securely
+                </button>
               </>
             )}
-
-            {current === "login" ? (
-              <LoginHelper />
-            ) : (
-              <div className="h-[72px] invisible"></div>
-            )}
-
-            <button type="submit" className={submitButtonClasses}>
-              {current === "login" ? "Login Securely" : "Register Account"}
-            </button>
           </form>
 
-          <p className="mt-6 text-center text-gray-700">
+          <p className="mt-3 text-center text-gray-700">
             {current === "login"
               ? "New to our portal?"
               : "Already have an account?"}{" "}

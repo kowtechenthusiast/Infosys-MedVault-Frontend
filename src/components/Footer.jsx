@@ -28,8 +28,9 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-sm text-slate-400 max-w-sm">
-              The secure, digital gateway built for **HIPAA compliant** and
-              seamless healthcare management globally.
+              The secure, digital gateway built for{" "}
+              <strong>HIPAA compliant</strong> and seamless healthcare
+              management globally.
             </p>
           </div>
 

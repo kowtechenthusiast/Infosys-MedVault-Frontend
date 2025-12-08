@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
 
     if (savedRole) setRole(savedRole);
     if (savedUser) setUser(JSON.parse(savedUser));
+    if (localStorage.getItem("adminToken")) setRole("admin");
   }, []);
 
   const login = (userData, roleValue) => {
@@ -28,7 +29,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ role, user, login, logout }}>
+    <AuthContext.Provider value={{ role, user, login, logout, setRole }}>
       {children}
     </AuthContext.Provider>
   );

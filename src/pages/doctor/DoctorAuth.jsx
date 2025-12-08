@@ -1,110 +1,195 @@
 import { useState } from "react";
 import DOCTOR_IMAGE_URL from "../../assets/doctor.jpg";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/useAuthContext";
+
+// OTP Input component for the 5-block input
+const OtpInput = ({ otp, setOtp }) => {
+  const inputStyle =
+    "w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg bg-white/70 focus:border-blue-600 outline-none transition";
+
+  const handleChange = (e, index) => {
+    const value = e.target.value;
+
+    if (!/^\d*$/.test(value)) return; // Only allow digits
+
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1); // Take only the last entered digit
+    setOtp(newOtp);
+
+    // Auto-focus to the next input
+    if (value && index < 4) {
+      document.getElementById(`otp-input-${index + 1}`).focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    // Auto-focus to the previous input on backspace if the current field is empty
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-input-${index - 1}`).focus();
+    }
+  };
+
+  return (
+    <div className="flex justify-center space-x-2">
+      {[...Array(5)].map((_, index) => (
+        <input
+          key={index}
+          id={`otp-input-${index}`}
+          type="text"
+          maxLength="1"
+          value={otp[index] || ""}
+          onChange={(e) => handleChange(e, index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          className={inputStyle}
+          required
+        />
+      ))}
+    </div>
+  );
+};
 
 export default function DoctorAuth() {
   const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
-
+  const { setRole } = useAuth();
   const navigate = useNavigate();
-  // Form fields
+
+  // State for the new OTP flow
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", ""]); // 5 digits OTP
+
+  // Updated Form fields for simple registration (only fullName and email used for now)
   const [form, setForm] = useState({
     fullName: "",
-    gender: "",
-    yearsOfExperience: "",
-    specialization: "",
-    contactPhone: "",
     email: "",
-    password: "",
-    confirmPassword: "",
-    licenseFile: null,
+    password: "", // only used for login
   });
 
-  // Handle text/select inputs
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle file upload
-  const handleFile = (e) => {
-    setForm({ ...form, licenseFile: e.target.files[0] });
-  };
-
-  // Clean switch handler (no useEffect needed)
   const switchForm = () => {
     setMessage("");
+    setIsOtpSent(false); // Reset OTP state when switching
+    setOtp(["", "", "", "", ""]);
     setForm({
       fullName: "",
-      gender: "",
-      yearsOfExperience: "",
-      specialization: "",
-      contactPhone: "",
       email: "",
       password: "",
-      confirmPassword: "",
-      licenseFile: null,
     });
     setCurrent((prev) => (prev === "login" ? "register" : "login"));
   };
 
-  // API base URL
   const API_URL = "http://localhost:8080/doctor";
+
+  // New handler for sending OTP
+  const handleSendOtp = async () => {
+    setMessage("");
+    if (!form.fullName || !form.email) {
+      return setMessage("Full Name and Email are required.");
+    }
+
+    try {
+      // 1. Request OTP/validate email (server checks for duplicate email and sends OTP)
+      const res = await fetch(`${API_URL}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Includes duplicate email check
+        setMessage(data.message || "Failed to send OTP.");
+        return;
+      }
+
+      setMessage("OTP sent to your email. Please check your inbox.");
+      setIsOtpSent(true);
+    } catch (err) {
+      setMessage("Server error during OTP request. Try again later.");
+      console.error(err);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
 
     try {
-      if (current == "register") {
-        // Registration password match check
-        if (form.password !== form.confirmPassword) {
-          setMessage("Passwords do not match!");
-          return;
+      // -------------------- REGISTRATION (FINAL STEP) --------------------
+      if (current === "register") {
+        if (!isOtpSent) {
+          return handleSendOtp(); // If button is clicked and OTP isn't sent, send it first
         }
 
-        const formData = new FormData();
-        Object.keys(form).forEach((key) => {
-          formData.append(key, form[key]);
-        });
+        const otpString = otp.join("");
+        if (otpString.length !== 5) {
+          return setMessage("Please enter the 5-digit OTP.");
+        }
 
+        // 2. Validate OTP
         const res = await fetch(`${API_URL}/register`, {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: form.fullName,
+            email: form.email,
+            otp: otpString,
+          }),
         });
 
         const data = await res.json();
+
         if (!res.ok) {
-          setMessage(data.message || "Registration failed");
+          setMessage(data.message || "OTP validation failed or invalid data.");
           return;
         }
 
-        setMessage("Registration submitted for verification!");
-        switchForm();
-      } else if (current == "login") {
+        // 3. Success -> Navigate to profile completion
+        setMessage("Registration successful! Please complete your profile.");
+        // Doctor is now registered but status is pending, we can navigate them to profile setup page.
+        navigate("/doctor/profile-setup");
+      }
+
+      // ----------------------- LOGIN -----------------------
+      else if (current === "login") {
         const res = await fetch(`${API_URL}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: form.email, password: form.password }),
+          body: JSON.stringify({
+            email: form.email,
+            password: form.password,
+          }),
         });
 
         const data = await res.json();
+
         if (!res.ok) return setMessage(data.message || "Invalid login");
 
-        localStorage.setItem("doctorToken", data.token);
-        setMessage("Login successful!");
-
-        if (data.status == "PENDING") navigate("/doctor/pending");
-        else navigate("/doctor/dashboard");
+        // Revised Login Logic
+        if (data.status === "PENDING") {
+          localStorage.setItem("doctorToken", data.token);
+          navigate("/pending"); // Redirect to /pending if status is PENDING
+        } else {
+          localStorage.setItem("doctorToken", data.token);
+          setMessage("Login successful!");
+          setRole("doctor");
+          navigate("/doctor/dashboard"); // Redirect to /dashboard if status is APPROVED
+        }
       }
-
-      // LOGIN
     } catch (err) {
       setMessage("Server error. Try again later.");
       console.error(err);
     }
   };
 
-  // UI classnames
+  // ---------------- UI STYLES ----------------
   const inputWrapper = "relative w-full";
   const inputStyle =
     "w-full px-4 py-3 peer border border-gray-300 rounded-xl bg-white/60 backdrop-blur-md " +
@@ -113,20 +198,19 @@ export default function DoctorAuth() {
     "absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm transition-all " +
     "peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 " +
     "peer-valid:top-2 peer-valid:text-xs peer-valid:text-blue-600";
-
   const primaryButtonStyle =
     "w-full py-3 rounded-xl bg-gradient-to-r from-blue-700 to-teal-600 cursor-pointer text-white font-semibold " +
-    "shadow-lg hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition";
+    "shadow-lg hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-100 to-blue-200 p-6 font-inter">
       <div className="flex flex-col lg:flex-row bg-white/40 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden max-w-6xl w-full border border-white/30">
-        {/* LEFT IMAGE SIDE */}
+        {/* LEFT IMAGE AREA */}
         <div className="lg:w-1/2 relative min-h-[520px]">
           <img
             src={DOCTOR_IMAGE_URL}
             alt="Doctor"
-            className="absolute inset-0 w-full h-full object-cover p-17"
+            className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-linear-to-br from-blue-900/80 to-teal-700/60 mix-blend-multiply"></div>
 
@@ -140,12 +224,12 @@ export default function DoctorAuth() {
           </div>
         </div>
 
-        {/* RIGHT FORM SIDE */}
+        {/* RIGHT FORM AREA */}
         <div className="lg:w-1/2 p-10 flex flex-col justify-center">
           <h2 className="text-4xl font-extrabold text-blue-800 mb-10 text-center font-poppins">
-            {current == "login"
+            {current === "login"
               ? "Welcome Back"
-              : "Create Your Professional Account"}
+              : "Create Your Doctor Account"}
           </h2>
 
           {message && (
@@ -155,179 +239,63 @@ export default function DoctorAuth() {
           )}
 
           <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-            {/* REGISTRATION FIELDS */}
-            {current == "register" ? (
+            {/* ---------------- REGISTRATION ---------------- */}
+            {current === "register" && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Basic Fields */}
-                  <div className={inputWrapper}>
-                    <input
-                      className={inputStyle}
-                      required
-                      name="fullName"
-                      value={form.fullName}
-                      onChange={handleChange}
-                    />
-                    <label className={labelStyle}>Full Name</label>
-                  </div>
-
-                  {/* Gender */}
-                  <div className={inputWrapper}>
-                    <select
-                      className={`${inputStyle} bg-white`}
-                      required
-                      name="gender"
-                      value={form.gender}
-                      onChange={handleChange}
-                    >
-                      <option value=""></option>
-                      <option>Male</option>
-                      <option>Female</option>
-                      <option>Other</option>
-                    </select>
-                    <label className={labelStyle}>Gender</label>
-                  </div>
-
-                  {/* Experience */}
-                  <div className={inputWrapper}>
-                    <input
-                      className={inputStyle}
-                      type="number"
-                      min="0"
-                      required
-                      name="yearsOfExperience"
-                      value={form.yearsOfExperience}
-                      onChange={handleChange}
-                    />
-                    <label className={labelStyle}>Years of Experience</label>
-                  </div>
-
-                  {/* Department */}
-                  {/* <div className={inputWrapper}>
-                    <select
-                      className={`${inputStyle} bg-white`}
-                      required
-                      name="hospitalDepartment"
-                      value={form.hospitalDepartment}
-                      onChange={handleChange}
-                    >
-                      <option value=""></option>
-                      <option>Emergency</option>
-                      <option>Outpatient (OPD)</option>
-                      <option>Radiology</option>
-                      <option>Pathology</option>
-                      <option>Pediatrics</option>
-                      <option>General Medicine</option>
-                      <option>Surgery</option>
-                      <option>Orthopedics</option>
-                    </select>
-                    <label className={labelStyle}>Hospital Department</label>
-                  </div> */}
-
-                  {/* Specialization */}
-                  <div className={inputWrapper}>
-                    <select
-                      className={`${inputStyle} bg-white`}
-                      required
-                      name="specialization"
-                      value={form.specialization}
-                      onChange={handleChange}
-                    >
-                      <option value=""></option>
-                      {[
-                        "Cardiology",
-                        "Neurology",
-                        "Dermatology",
-                        "Psychiatry",
-                        "Orthopedics",
-                        "General Physician",
-                        "ENT Specialist",
-                        "Gastroenterology",
-                        "Urology",
-                        "Nephrology",
-                        "Gynecology",
-                        "Oncology",
-                      ].map((s, i) => (
-                        <option key={i}>{s}</option>
-                      ))}
-                    </select>
-                    <label className={labelStyle}>Specialization</label>
-                  </div>
-
-                  {/* Contact & Email */}
-                  {[
-                    ["contactPhone", "Contact Phone", "tel"],
-                    ["email", "Email Address", "email"],
-                  ].map(([name, label, type], i) => (
-                    <div className={inputWrapper} key={i}>
-                      <input
-                        className={inputStyle}
-                        type={type}
-                        required
-                        name={name}
-                        value={form[name]}
-                        onChange={handleChange}
-                      />
-                      <label className={labelStyle}>{label}</label>
-                    </div>
-                  ))}
-
-                  {/* Consultation Type */}
-                  {/* <div className={inputWrapper}>
-                    <select
-                      className={`${inputStyle} bg-white`}
-                      required
-                      name="consultationType"
-                      value={form.consultationType}
-                      onChange={handleChange}
-                    >
-                      <option value=""></option>
-                      <option>In-Person Only</option>
-                      <option>Online Only</option>
-                      <option>Both In-Person & Online</option>
-                    </select>
-                    <label className={labelStyle}>Consultation Type</label>
-                  </div> */}
-                </div>
-
-                {/* Document Upload */}
-                <div className="flex flex-col">
-                  <label className="text-gray-700 text-sm font-medium mb-2">
-                    Upload Medical License Document (PDF / JPG)
-                  </label>
+                <div className={inputWrapper}>
                   <input
-                    className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg
-                  file:border-0 file:text-sm file:font-semibold file:bg-blue-100 
-                  file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"
-                    type="file"
-                    onChange={handleFile}
+                    className={inputStyle}
                     required
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={handleChange}
+                    disabled={isOtpSent} // Disable after OTP is sent
                   />
+                  <label className={labelStyle}>Full Name</label>
                 </div>
 
-                {/* Passwords */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    ["password", "Password"],
-                    ["confirmPassword", "Confirm Password"],
-                  ].map(([name, label], i) => (
-                    <div className={inputWrapper} key={i}>
-                      <input
-                        className={inputStyle}
-                        type="password"
-                        required
-                        name={name}
-                        value={form[name]}
-                        onChange={handleChange}
-                      />
-                      <label className={labelStyle}>{label}</label>
-                    </div>
-                  ))}
+                <div className={inputWrapper}>
+                  <input
+                    className={inputStyle}
+                    type="email"
+                    required
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={isOtpSent} // Disable after OTP is sent
+                  />
+                  <label className={labelStyle}>Email Address</label>
                 </div>
+
+                {!isOtpSent && (
+                  <button
+                    type="button" // Use type="button" to prevent form submission
+                    className={primaryButtonStyle}
+                    onClick={handleSendOtp}
+                  >
+                    Generate & Send OTP
+                  </button>
+                )}
+
+                {isOtpSent && (
+                  <>
+                    <p className="text-center text-sm text-gray-600 -mt-2">
+                      Enter the 5-digit code sent to{" "}
+                      <strong>{form.email}</strong>
+                    </p>
+                    <OtpInput otp={otp} setOtp={setOtp} />
+
+                    <button type="submit" className={primaryButtonStyle}>
+                      Verify OTP and Register
+                    </button>
+                  </>
+                )}
               </>
-            ) : (
-              // ---------------- LOGIN FORM ----------------
-              <div className="flex flex-col gap-4">
+            )}
+
+            {/* ---------------- LOGIN FIELDS ---------------- */}
+            {current === "login" && (
+              <>
                 <div className={inputWrapper}>
                   <input
                     className={inputStyle}
@@ -339,7 +307,6 @@ export default function DoctorAuth() {
                   />
                   <label className={labelStyle}>Email Address</label>
                 </div>
-
                 <div className={inputWrapper}>
                   <input
                     className={inputStyle}
@@ -352,28 +319,25 @@ export default function DoctorAuth() {
                   <label className={labelStyle}>Password</label>
                 </div>
 
-                <a className="text-sm text-blue-600 hover:underline self-end font-medium -mt-2 mb-10 cursor-pointer">
+                <a className="text-sm text-blue-600 hover:underline self-end font-medium -mt-2 mb-5 cursor-pointer">
                   Forgot Password?
                 </a>
-
                 <LoginFiller />
-              </div>
-            )}
 
-            <button type="submit" className={primaryButtonStyle}>
-              {current == "login"
-                ? "Login Securely"
-                : "Submit for Verification"}
-            </button>
+                <button type="submit" className={primaryButtonStyle}>
+                  Login Securely
+                </button>
+              </>
+            )}
           </form>
 
           <p className="mt-8 text-center text-gray-700">
-            {current == "login" ? "New to MediBook?" : "Already registered?"}{" "}
+            {current === "login" ? "New to MediBook?" : "Already registered?"}{" "}
             <button
               onClick={switchForm}
               className="text-blue-700 font-bold cursor-pointer hover:underline"
             >
-              {current == "login" ? "Register Now" : "Login Here"}
+              {current === "login" ? "Register Now" : "Login Here"}
             </button>
           </p>
         </div>
@@ -382,14 +346,13 @@ export default function DoctorAuth() {
   );
 }
 
-// LOGIN HELPER COMPONENT
+// ---------------- LOGIN INFO SECTION (Unchanged) ----------------
 function LoginFiller() {
   return (
     <div className="flex flex-col gap-4 grow">
-      <div className="h-2"></div>
       <p className="text-sm text-gray-500 text-center leading-relaxed">
-        Manage appointments, patient records, prescriptions, and more — securely
-        and instantly.
+        Manage appointments, patient records, prescriptions, and more —
+        securely.
       </p>
 
       <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-200 shadow-sm">
@@ -418,7 +381,7 @@ function LoginFiller() {
         </p>
       </div>
 
-      <div className="h-[90px] md:h-90px]"></div>
+      <div className="h-[5px]"></div>
     </div>
   );
 }

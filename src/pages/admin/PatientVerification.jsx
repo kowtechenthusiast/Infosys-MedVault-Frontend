@@ -1,7 +1,6 @@
 import { Search, Filter, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useState } from "react";
-// Assuming VerificationCard is the stylized component we updated earlier
-import VerificationCard from "../../components/admin/VerificationCard";
+import PatientVerificationCard from "../../components/admin/PatientVerificationCard";
 
 export default function PatientVerification() {
   // --- Data Definition ---
@@ -9,42 +8,52 @@ export default function PatientVerification() {
     {
       id: 201,
       name: "Suresh Gupta",
+      email: "suresh.gupta@example.com",
       status: "PENDING",
       certificate: "Aadhar_9876.pdf",
       specialization: "Proof of Identity",
       experience: "DOB: 1985-04-12",
+      createdAt: "2025-01-10T09:15:00Z",
     },
     {
       id: 202,
       name: "Alia Bhatt",
+      email: "alia.bhatt@example.com",
       status: "PENDING",
       certificate: "License_4567.pdf",
       specialization: "Proof of Residence",
       experience: "DOB: 1999-11-20",
+      createdAt: "2025-01-12T14:20:00Z",
     },
     {
       id: 203,
       name: "Ravi Kishan",
+      email: "ravi.kishan@example.com",
       status: "PENDING",
       certificate: "VoterID_1234.pdf",
       specialization: "Proof of Identity",
       experience: "DOB: 1975-01-01",
+      createdAt: "2025-01-15T08:45:00Z",
     },
     {
       id: 204,
       name: "Deepika Padukone",
+      email: "deepika.padukone@example.com",
       status: "PENDING",
       certificate: "Passport_5678.pdf",
       specialization: "Proof of Residence",
       experience: "DOB: 1986-07-06",
+      createdAt: "2025-01-17T11:30:00Z",
     },
     {
       id: 205,
       name: "Rahul Singh",
+      email: "rahul.singh@example.com",
       status: "PENDING",
       certificate: "Aadhar_0011.pdf",
       specialization: "Proof of Identity",
       experience: "DOB: 2001-05-15",
+      createdAt: "2025-01-19T16:10:00Z",
     },
   ];
 
@@ -104,7 +113,7 @@ export default function PatientVerification() {
       {/* Verification List (Using Paginated Data) */}
       <div className="space-y-6">
         {currentRequests.map((patient) => (
-          <VerificationCard
+          <PatientVerificationCard
             key={patient.id}
             data={patient}
             // Using 'patient' as the role for dynamic card rendering

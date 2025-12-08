@@ -52,7 +52,7 @@ export default function App() {
 
         {/* ---------------- DOCTOR ---------------- */}
         <Route path="/doctor/auth" element={<DoctorAuth />} />
-        <Route path="/doctor/pending" element={<DoctorPending />} />
+        <Route path="/pending" element={<DoctorPending />} />
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
 
         {/* ---------------- ADMIN ---------------- */}
