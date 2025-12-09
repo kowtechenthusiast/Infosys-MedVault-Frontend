@@ -29,7 +29,7 @@ const FloatingInput = ({
       onChange={onChange}
       name={name}
       disabled={disabled}
-      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl
+      className="w-full pl-12 pr-4 pb-3 pt-4 bg-gray-50 border border-gray-300 rounded-xl
       peer focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition duration-200
       disabled:bg-gray-200 disabled:cursor-not-allowed"
     />

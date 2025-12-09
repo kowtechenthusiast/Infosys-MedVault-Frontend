@@ -1,27 +1,28 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
-  const [role, setRole] = useState(null); // patient, doctor, admin
-  const [user, setUser] = useState(null);
+  // Initialize state directly from localStorage (no effect needed)
+  const [role, setRole] = useState(() => {
+    if (localStorage.getItem("adminToken")) return "admin";
+    return localStorage.getItem("role") || null;
+  });
 
-  // Load token/role on page refresh
-  useEffect(() => {
-    const savedRole = localStorage.getItem("role");
+  const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
-    if (savedRole) setRole(savedRole);
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (localStorage.getItem("adminToken")) setRole("admin");
-  }, []);
-
+  // Login
   const login = (userData, roleValue) => {
     localStorage.setItem("role", roleValue);
     localStorage.setItem("user", JSON.stringify(userData));
+
     setRole(roleValue);
     setUser(userData);
   };
 
+  // Logout
   const logout = () => {
     localStorage.clear();
     setRole(null);

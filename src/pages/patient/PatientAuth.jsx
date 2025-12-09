@@ -58,24 +58,29 @@ function FloatingInput({
   value,
   onChange,
   required = false,
-  disabled = false, // Added disabled prop
+  disabled = false,
 }) {
   return (
     <div className="relative w-full">
       <input
         type={type}
+        name={name}
         required={required}
         value={value}
         onChange={onChange}
-        name={name}
-        disabled={disabled} // Apply disabled prop
-        className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white/60 backdrop-blur-md
-          peer focus:border-purple-600 focus:ring-2 focus:ring-purple-300 outline-none transition font-medium disabled:bg-gray-100 disabled:cursor-not-allowed"
+        disabled={disabled}
+        placeholder=" "
+        className="w-full px-4 pb-3 pt-4 font-mono text-l border border-gray-300 rounded-xl 
+          bg-white/60 backdrop-blur-md placeholder-transparent
+          peer focus:border-purple-600 focus:ring-2 focus:ring-purple-300
+          outline-none transition font-medium
+          disabled:bg-gray-100 disabled:cursor-not-allowed"
       />
       <label
-        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm transition-all
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none
+          transition-all 
           peer-focus:top-2 peer-focus:text-xs peer-focus:text-purple-600
-          peer-valid:top-2 peer-valid:text-xs peer-valid:text-purple-600"
+          peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-purple-600"
       >
         {label}
       </label>
@@ -122,6 +127,7 @@ export default function PatientAuth() {
   const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
   const { setRole } = useAuth();
+  const [userId, setUserId] = useState(0);
   const navigate = useNavigate();
 
   // --- New OTP states ---
@@ -152,7 +158,7 @@ export default function PatientAuth() {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const API_URL = "http://localhost:8080/patient";
+  const API_URL = "http://localhost:8080/api/auth";
 
   // New handler for sending OTP
   const handleSendOtp = async () => {
@@ -163,15 +169,19 @@ export default function PatientAuth() {
 
     try {
       // 1. Request OTP/validate email (server checks for duplicate email and sends OTP)
-      const res = await fetch(`${API_URL}/send-otp`, {
+      const res = await fetch(`${API_URL}/generate-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: user.fullName,
           email: user.email,
+          role: "patient",
         }),
       });
 
       const data = await res.json();
+      setUserId(data.userId); // Store userId for OTP verification
+      // Store email for future reference
 
       if (!res.ok) {
         // Includes duplicate email check
@@ -204,12 +214,12 @@ export default function PatientAuth() {
         }
 
         // 2. Validate OTP and Complete Registration
-        const res = await fetch(`${API_URL}/register`, {
+        const res = await fetch(`${API_URL}/verify-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            fullName: user.fullName,
-            email: user.email,
+            userId: userId,
+            role: "patient",
             otp: otpString,
           }),
         });
@@ -227,6 +237,9 @@ export default function PatientAuth() {
         setMessage(
           "Registration successful! Your temporary password will be emailed."
         );
+        localStorage.setItem("patientId", data.userId); // Store temporarily for pending checks
+        localStorage.setItem("role", "patient");
+        setRole("patient");
         navigate("/pending"); // Navigates to a waiting page (e.g., waiting for password email/approval)
       }
 

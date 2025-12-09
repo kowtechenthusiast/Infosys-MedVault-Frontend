@@ -52,6 +52,7 @@ const OtpInput = ({ otp, setOtp }) => {
 export default function DoctorAuth() {
   const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
+  const [userId, setUserId] = useState(0);
   const { setRole } = useAuth();
   const navigate = useNavigate();
 
@@ -82,7 +83,7 @@ export default function DoctorAuth() {
     setCurrent((prev) => (prev === "login" ? "register" : "login"));
   };
 
-  const API_URL = "http://localhost:8080/doctor";
+  const API_URL = "http://localhost:8080/api/auth";
 
   // New handler for sending OTP
   const handleSendOtp = async () => {
@@ -93,15 +94,18 @@ export default function DoctorAuth() {
 
     try {
       // 1. Request OTP/validate email (server checks for duplicate email and sends OTP)
-      const res = await fetch(`${API_URL}/send-otp`, {
+      const res = await fetch(`${API_URL}/generate-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: form.fullName,
           email: form.email,
+          role: "doctor",
         }),
       });
 
       const data = await res.json();
+      setUserId(data.userId); // Store userId for OTP verification
 
       if (!res.ok) {
         // Includes duplicate email check
@@ -134,12 +138,12 @@ export default function DoctorAuth() {
         }
 
         // 2. Validate OTP
-        const res = await fetch(`${API_URL}/register`, {
+        const res = await fetch(`${API_URL}/verify-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            fullName: form.fullName,
-            email: form.email,
+            userId: userId,
+            role: "doctor",
             otp: otpString,
           }),
         });
@@ -150,11 +154,13 @@ export default function DoctorAuth() {
           setMessage(data.message || "OTP validation failed or invalid data.");
           return;
         }
-
+        localStorage.setItem("doctorId", data.userId); // Store temporarily for pending checks
+        localStorage.setItem("role", "doctor");
+        setRole("doctor");
         // 3. Success -> Navigate to profile completion
         setMessage("Registration successful! Please complete your profile.");
         // Doctor is now registered but status is pending, we can navigate them to profile setup page.
-        navigate("/doctor/profile-setup");
+        navigate("/doctor/pending");
       }
 
       // ----------------------- LOGIN -----------------------
@@ -192,12 +198,14 @@ export default function DoctorAuth() {
   // ---------------- UI STYLES ----------------
   const inputWrapper = "relative w-full";
   const inputStyle =
-    "w-full px-4 py-3 peer border border-gray-300 rounded-xl bg-white/60 backdrop-blur-md " +
-    "focus:border-blue-600 focus:ring-2 focus:ring-blue-300 outline-none transition font-medium";
+    "w-full px-4 pb-3 pt-4 peer border border-gray-300 rounded-xl font-mono text-l bg-white/60 backdrop-blur-md " +
+    "focus:border-blue-600 focus:ring-2 focus:ring-blue-300 outline-none transition font-medium placeholder-transparent";
+
   const labelStyle =
     "absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm transition-all " +
     "peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 " +
-    "peer-valid:top-2 peer-valid:text-xs peer-valid:text-blue-600";
+    "peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-blue-600";
+
   const primaryButtonStyle =
     "w-full py-3 rounded-xl bg-gradient-to-r from-blue-700 to-teal-600 cursor-pointer text-white font-semibold " +
     "shadow-lg hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed";
@@ -245,6 +253,7 @@ export default function DoctorAuth() {
                 <div className={inputWrapper}>
                   <input
                     className={inputStyle}
+                    placeholder=" "
                     required
                     name="fullName"
                     value={form.fullName}
@@ -257,6 +266,7 @@ export default function DoctorAuth() {
                 <div className={inputWrapper}>
                   <input
                     className={inputStyle}
+                    placeholder=" "
                     type="email"
                     required
                     name="email"
@@ -299,6 +309,7 @@ export default function DoctorAuth() {
                 <div className={inputWrapper}>
                   <input
                     className={inputStyle}
+                    placeholder=" "
                     type="email"
                     required
                     name="email"
@@ -307,9 +318,11 @@ export default function DoctorAuth() {
                   />
                   <label className={labelStyle}>Email Address</label>
                 </div>
+
                 <div className={inputWrapper}>
                   <input
                     className={inputStyle}
+                    placeholder=" "
                     type="password"
                     required
                     name="password"

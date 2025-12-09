@@ -20,6 +20,8 @@ import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import DoctorProfile from "./pages/doctor/DoctorProfile";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 export default function App() {
   return (
@@ -61,8 +63,8 @@ export default function App() {
 
         {/* Profile Routes */}
         <Route path="/patient/profile" element={<PatientProfile />} />
-        <Route path="/doctor/profile" element={<h1>Doctor Profile</h1>} />
-        <Route path="/admin/profile" element={<h1>Admin Profile</h1>} />
+        <Route path="/doctor/profile" element={<DoctorProfile />} />
+        <Route path="/admin/profile" element={<AdminProfile />} />
       </Routes>
     </BrowserRouter>
   );

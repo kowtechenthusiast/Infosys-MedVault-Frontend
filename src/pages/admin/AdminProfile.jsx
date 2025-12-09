@@ -4,13 +4,12 @@ import {
   User,
   Mail,
   Phone,
-  Calendar,
-  Heart,
+  Briefcase,
+  Building,
   ShieldCheck,
   CheckCircle,
   Key,
-  Trash2,
-  AtSign,
+  FileBadge,
 } from "lucide-react";
 
 // === Reusable Input Component ===
@@ -48,38 +47,30 @@ const ProfileInput = memo(
   )
 );
 
-export default function PatientProfile() {
-  const patientId = localStorage.getItem("patientId");
+export default function AdminProfile() {
+  const adminId = localStorage.getItem("adminId");
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    dateOfBirth: "",
-    gender: "",
-    bloodGroup: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "",
-    pincode: "",
+    designation: "",
+    department: "",
     password: "",
-    idProof: null,
+    certificate: null,
   });
 
   const [isEditing, setIsEditing] = useState(false);
 
-  // --- Fetch patient profile ---
+  // --- Fetch Admin Profile ---
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/profile/patient/${patientId}`
+          `http://localhost:8080/api/profile/admin/${adminId}`
         );
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch patient data");
-        }
+        if (!res.ok) throw new Error("Failed to fetch admin profile");
 
         const data = await res.json();
 
@@ -87,15 +78,15 @@ export default function PatientProfile() {
           ...prev,
           ...data,
         }));
-      } catch (e) {
-        console.error("Error fetching profile:", e);
+      } catch (err) {
+        console.error("Error loading admin profile:", err);
       }
     }
 
-    if (patientId) fetchData();
-  }, [patientId]);
+    if (adminId) fetchData();
+  }, [adminId]);
 
-  // --- Handle Form Change ---
+  // Handle form data change
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
@@ -105,78 +96,71 @@ export default function PatientProfile() {
     }));
   };
 
-  // --- Save Updated Profile ---
+  // Handle Save
   const handleSave = async () => {
     if (!formData.password) {
-      alert("❗ Password is required to update your profile.");
+      alert("❗ Password is required for updating the admin profile.");
+      return;
+    }
+
+    if (!formData.certificate) {
+      alert("❗ Certificate file is required.");
       return;
     }
 
     const body = new FormData();
-    body.append("userId", patientId);
+    body.append("userId", adminId);
     body.append("password", formData.password);
-    body.append("dateOfBirth", formData.dateOfBirth);
-    body.append("gender", formData.gender);
-    body.append("bloodGroup", formData.bloodGroup);
-    body.append("phone", formData.phone);
-    body.append("address", formData.address);
-    body.append("city", formData.city);
-    body.append("state", formData.state);
-    body.append("country", formData.country);
-    body.append("pincode", formData.pincode);
-    if (formData.idProof) body.append("idProof", formData.idProof);
+    if (formData.phone) body.append("phone", formData.phone);
+    if (formData.designation) body.append("designation", formData.designation);
+    if (formData.department) body.append("department", formData.department);
+
+    body.append("certificate", formData.certificate);
 
     try {
-      const res = await fetch("http://localhost:8080/api/profile/patient", {
-        method: "PUT",
-        body,
-      });
+      const res = await fetch(
+        "http://localhost:8080/api/profile/admin/profile",
+        {
+          method: "PUT",
+          body,
+        }
+      );
 
       const data = await res.json();
-      console.log("Updated:", data);
 
       if (data.success) {
-        alert("Profile updated successfully!");
+        alert("Admin profile updated successfully!");
         setIsEditing(false);
       } else {
-        alert(data.message || "Failed to update profile");
+        alert(data.message || "Update failed");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
+      alert("Error updating admin profile.");
     }
   };
 
-  // --- Profile Completion ---
+  // Profile completion %
   const profileCompletion = useMemo(() => {
-    const requiredFields = [
-      "name",
-      "phone",
-      "dateOfBirth",
-      "gender",
-      "bloodGroup",
-      "address",
-      "city",
-      "state",
-      "country",
-      "pincode",
-    ];
+    const required = ["phone", "designation", "department"];
 
-    const completed = requiredFields.filter(
+    const completed = required.filter(
       (f) => formData[f] && formData[f] !== ""
     ).length;
-    return Math.floor((completed / requiredFields.length) * 100);
+
+    return Math.floor((completed / required.length) * 100);
   }, [formData]);
 
   return (
     <div className="space-y-8 p-4 md:p-8">
       <h2 className="text-3xl font-extrabold text-slate-800 pb-3 border-b border-blue-100">
-        👤 My Profile & Health Data
+        🛡️ Admin Profile & Verification
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT SIDE */}
         <div className="space-y-6">
-          <div className="p-6 bg-white rounded-2xl shadow-xl border">
+          <div className="p-6 bg-white border rounded-2xl shadow-xl">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
               <ShieldCheck size={20} className="text-green-500" /> Profile
               Status
@@ -189,19 +173,19 @@ export default function PatientProfile() {
               </span>
             </div>
 
-            <div className="w-full bg-slate-200 h-3 rounded-full">
+            <div className="w-full h-3 rounded-full bg-slate-200">
               <div
-                className="h-3 bg-green-400 rounded-full transition-all"
+                className="h-3 bg-green-500 rounded-full transition-all"
                 style={{ width: `${profileCompletion}%` }}
               ></div>
             </div>
           </div>
 
-          <div className="p-6 bg-white rounded-2xl border space-y-3">
+          <div className="p-6 bg-white border rounded-2xl space-y-3">
             {isEditing ? (
               <button
                 onClick={handleSave}
-                className="w-full bg-green-500 text-white py-3 rounded-xl font-bold"
+                className="w-full bg-green-600 text-white py-3 rounded-xl font-bold"
               >
                 💾 Save Changes
               </button>
@@ -217,9 +201,9 @@ export default function PatientProfile() {
         </div>
 
         {/* RIGHT SIDE FORM */}
-        <div className="lg:col-span-2 p-8 bg-white rounded-2xl border space-y-6">
+        <div className="lg:col-span-2 p-8 bg-white border rounded-2xl space-y-6">
           <h3 className="text-2xl font-bold text-blue-700 border-b pb-2">
-            Personal Details
+            Admin Personal Details
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -228,8 +212,7 @@ export default function PatientProfile() {
               label="Full Name"
               name="name"
               value={formData.name}
-              disabled={!isEditing}
-              onChange={handleChange}
+              readOnly
             />
 
             <ProfileInput
@@ -250,71 +233,25 @@ export default function PatientProfile() {
             />
 
             <ProfileInput
-              icon={Calendar}
-              type="date"
-              label="Date of Birth"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
+              icon={Briefcase}
+              label="Designation"
+              name="designation"
+              value={formData.designation}
               disabled={!isEditing}
               onChange={handleChange}
             />
           </div>
 
           <h3 className="text-2xl font-bold text-blue-700 border-b pb-2 mt-6">
-            Medical & Address
+            Admin Department Info
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ProfileInput
-              icon={Heart}
-              label="Blood Group"
-              name="bloodGroup"
-              value={formData.bloodGroup}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-
-            <ProfileInput
-              icon={Mail}
-              label="Address"
-              name="address"
-              value={formData.address}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-
-            <ProfileInput
-              icon={Mail}
-              label="City"
-              name="city"
-              value={formData.city}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-
-            <ProfileInput
-              icon={Mail}
-              label="State"
-              name="state"
-              value={formData.state}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-
-            <ProfileInput
-              icon={Mail}
-              label="Country"
-              name="country"
-              value={formData.country}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-
-            <ProfileInput
-              icon={Mail}
-              label="Pincode"
-              name="pincode"
-              value={formData.pincode}
+              icon={Building}
+              label="Department"
+              name="department"
+              value={formData.department}
               disabled={!isEditing}
               onChange={handleChange}
             />
@@ -322,31 +259,30 @@ export default function PatientProfile() {
 
           {/* File Upload */}
           {isEditing && (
-            <div className="mt-4">
-              <label className="block text-sm font-semibold mb-1">
-                Upload ID Proof (PDF / Image)
-              </label>
-              <input
-                type="file"
-                name="idProof"
-                onChange={handleChange}
-                className="w-full"
-              />
-            </div>
-          )}
+            <>
+              <div className="mt-4">
+                <label className="block text-sm font-semibold mb-1">
+                  Certificate (PDF / Image)
+                </label>
+                <input
+                  type="file"
+                  name="certificate"
+                  required
+                  onChange={handleChange}
+                  className="w-full"
+                />
+              </div>
 
-          {/* Password */}
-          {isEditing && (
-            <div>
+              {/* Password */}
               <ProfileInput
                 icon={Key}
-                label="Password (Required for update)"
+                label="Password (Required)"
                 name="password"
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
               />
-            </div>
+            </>
           )}
         </div>
       </div>
