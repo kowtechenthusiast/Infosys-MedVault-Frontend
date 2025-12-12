@@ -146,7 +146,7 @@ export default function PatientProfile() {
         {/* Header Section */}
         <div className="mb-10 ml-2">
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-slate-800 via-blue-800 to-indigo-800 tracking-tight">
-            Patient Dashboard
+            Patient Profile
           </h1>
           <p className="text-slate-500 mt-2 text-lg">
             Manage your health profile and records securely.
