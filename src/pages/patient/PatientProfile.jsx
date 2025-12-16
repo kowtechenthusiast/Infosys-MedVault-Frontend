@@ -8,10 +8,11 @@ import AccountSettings from "../../components/patient/profile/AccountSettings";
 import SidebarTabs from "../../components/patient/profile/SidebarTabs";
 
 export default function PatientProfile() {
-  const patientId = localStorage.getItem("patientId");
+  const patientId = localStorage.getItem("userId");
 
   const [activeTab, setActiveTab] = useState("basic");
   const [isEditing, setIsEditing] = useState(false);
+  const [mustSetPasswordFirst, setMustSetPasswordFirst] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +24,7 @@ export default function PatientProfile() {
     address: "",
     city: "",
     state: "",
+    country: "",
     pincode: "",
     password: "",
 
@@ -40,31 +42,58 @@ export default function PatientProfile() {
     confirmPassword: "",
   });
 
-  const mustSetPasswordFirst =
-    !formData.password || formData.password.trim() === "";
-  // const mustSetPasswordFirst = false;
-  // Fetch patient profile
+  // -------------------------------------------
+  // FETCH PATIENT PROFILE
+  // -------------------------------------------
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch(
           `http://localhost:8080/api/profile/patient/${patientId}`
         );
-        if (res.ok) {
-          const data = await res.json();
-          setFormData((prev) => ({ ...prev, ...data }));
+
+        if (!res.ok) {
+          console.error("Bad response:", res.status);
+          return;
         }
+
+        const data = await res.json();
+        console.log("Profile API Response:", data);
+
+        // CASE 1 — Profile not completed
+        if (data.success === false && data.response) {
+          const base = data.response;
+
+          setFormData((prev) => ({
+            ...prev,
+            ...base,
+          }));
+
+          setMustSetPasswordFirst(!base.password);
+          return;
+        }
+
+        // CASE 2 — Profile exists
+        setFormData((prev) => ({
+          ...prev,
+          ...data,
+        }));
+
+        setMustSetPasswordFirst(!data.password);
       } catch (error) {
         console.error("Failed to fetch profile", error);
       }
     }
+
     load();
   }, [patientId]);
 
   const handleChange = (e) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-  // ------------------ PASSWORD SETUP HANDLER ------------------
+  // -------------------------------------------
+  // SET PASSWORD FIRST TIME
+  // -------------------------------------------
   const handleSetPassword = async () => {
     if (!formData.initialPassword || !formData.confirmPassword) {
       alert("Enter both password fields.");
@@ -77,17 +106,14 @@ export default function PatientProfile() {
     }
 
     try {
-      const res = await fetch(
-        "http://localhost:8080/api/profile/set-password",
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: patientId,
-            password: formData.initialPassword,
-          }),
-        }
-      );
+      const res = await fetch("http://localhost:8080/api/auth/set-password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: patientId,
+          password: formData.initialPassword,
+        }),
+      });
 
       if (res.ok) {
         alert("Password set successfully!");
@@ -97,6 +123,7 @@ export default function PatientProfile() {
           initialPassword: "",
           confirmPassword: "",
         }));
+        setMustSetPasswordFirst(false);
       } else {
         alert("Error setting password.");
       }
@@ -106,23 +133,60 @@ export default function PatientProfile() {
     }
   };
 
-  // ------------------ GENERAL PROFILE UPDATE ------------------
+  // -------------------------------------------
+  // GENERAL PROFILE UPDATE HANDLER
+  // -------------------------------------------
   const saveProfile = async () => {
     const fd = new FormData();
-    fd.append("userId", patientId);
 
-    Object.keys(formData).forEach((k) => {
-      if (formData[k]) fd.append(k, formData[k]);
+    // Combine only allowed backend fields
+    const allowedFields = [
+      "dateOfBirth",
+      "gender",
+      "bloodGroup",
+      "phone",
+      "address",
+      "city",
+      "state",
+      "country",
+      "pincode",
+      "sleepHours",
+      "diet",
+      "smoking",
+      "alcohol",
+      "sugarLevel",
+      "bpSys",
+      "bpDia",
+      "spo2",
+      "heartRate",
+    ];
+
+    const requestObject = { userId: patientId };
+
+    allowedFields.forEach((key) => {
+      if (formData[key] !== "" && formData[key] !== undefined) {
+        requestObject[key] = formData[key];
+      }
     });
 
-    try {
-      await fetch("http://localhost:8080/api/profile/patient", {
-        method: "PUT",
-        body: fd,
-      });
+    fd.append("data", JSON.stringify(requestObject));
 
-      setIsEditing(false);
-      alert("Profile updated successfully!");
+    try {
+      const res = await fetch(
+        "http://localhost:8080/api/profile/patient/complete-profile",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestObject),
+        }
+      );
+
+      if (res.ok) {
+        setIsEditing(false);
+        alert("Profile updated successfully!");
+      } else {
+        alert("Update failed");
+      }
     } catch (err) {
       console.error(err);
       alert("Update failed");
@@ -134,16 +198,17 @@ export default function PatientProfile() {
   const deleteAccount = () => alert("Account deleted!");
   const logout = () => alert("Logged out!");
 
+  // -------------------------------------------
+  // UI RENDER
+  // -------------------------------------------
   return (
     <div className="min-h-screen relative bg-slate-50 overflow-hidden font-sans selection:bg-blue-200">
-      {/* --- Ambient Background Elements --- */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-200/40 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute top-[20%] right-[-5%] w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-cyan-100/50 rounded-full blur-[100px] pointer-events-none" />
+      {/* Ambient Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-200/40 rounded-full blur-[100px]" />
+      <div className="absolute top-[20%] right-[-5%] w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-[120px]" />
+      <div className="absolute bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-cyan-100/50 rounded-full blur-[100px]" />
 
-      {/* --- Main Layout --- */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 lg:py-12">
-        {/* Header Section */}
         <div className="mb-10 ml-2">
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-slate-800 via-blue-800 to-indigo-800 tracking-tight">
             Patient Profile
@@ -154,7 +219,6 @@ export default function PatientProfile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <SidebarTabs
               activeTab={activeTab}
@@ -163,10 +227,8 @@ export default function PatientProfile() {
             />
           </div>
 
-          {/* Main Content Area */}
           <div className="lg:col-span-3">
-            <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] p-8 lg:p-10 transition-all duration-300 min-h-[600px] relative">
-              {/* Render Active Component */}
+            <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-[2.5rem] shadow-xl p-8 lg:p-10 min-h-[600px] relative">
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {activeTab === "basic" && (
                   <BasicDetails

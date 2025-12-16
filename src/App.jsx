@@ -51,10 +51,11 @@ export default function App() {
         />
         <Route path="/patient/dashboard/history" element={<PatientHistory />} />
         <Route path="/patient/dashboard/profile" element={<PatientProfile />} />
+        <Route path="/patient/pending" element={<DoctorPending />} />
 
         {/* ---------------- DOCTOR ---------------- */}
         <Route path="/doctor/auth" element={<DoctorAuth />} />
-        <Route path="/pending" element={<DoctorPending />} />
+        <Route path="/doctor/pending" element={<DoctorPending />} />
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
 
         {/* ---------------- ADMIN ---------------- */}

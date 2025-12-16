@@ -8,6 +8,9 @@ import {
   MapPin,
   Lock,
   Edit,
+  Check,
+  X,
+  AlertCircle,
 } from "lucide-react";
 
 export default function BasicDetails({
@@ -22,6 +25,39 @@ export default function BasicDetails({
   // Base button styles for re-use
   const buttonBase =
     "px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 justify-center";
+
+  // --- PASSWORD VALIDATION LOGIC ---
+  const currentPassword = formData.initialPassword || "";
+  const confirmPassword = formData.confirmPassword || "";
+
+  const passwordRequirements = [
+    {
+      id: 1,
+      label: "At least 8 characters",
+      valid: currentPassword.length >= 8,
+    },
+    {
+      id: 2,
+      label: "One uppercase letter",
+      valid: /[A-Z]/.test(currentPassword),
+    },
+    {
+      id: 3,
+      label: "One lowercase letter",
+      valid: /[a-z]/.test(currentPassword),
+    },
+    { id: 4, label: "One number", valid: /[0-9]/.test(currentPassword) },
+    {
+      id: 5,
+      label: "One special character",
+      valid: /[^A-Za-z0-9]/.test(currentPassword),
+    },
+  ];
+
+  const allRequirementsMet = passwordRequirements.every((req) => req.valid);
+  const passwordsMatch =
+    currentPassword === confirmPassword && currentPassword !== "";
+  const isFormValid = allRequirementsMet && passwordsMatch;
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
@@ -57,7 +93,7 @@ export default function BasicDetails({
 
       {/* --- STEP 1: Enforce Password Setup (Highly Styled Warning) --- */}
       {mustSetPasswordFirst && (
-        <div className="bg-linear-to-br from-red-50/70 to-red-100/70 backdrop-blur-md border border-red-200 p-8 rounded-3xl space-y-5 shadow-xl transition-all duration-500">
+        <div className="bg-linear-to-br from-red-50/70 to-red-100/70 backdrop-blur-md border border-red-200 p-8 rounded-3xl space-y-6 shadow-xl transition-all duration-500">
           <h4 className="text-xl text-red-700 font-bold flex items-center gap-3">
             <Lock size={20} className="text-red-500 animate-pulse" /> Security
             Initialization Required
@@ -89,10 +125,63 @@ export default function BasicDetails({
             />
           </div>
 
+          {/* --- PASSWORD STRENGTH VALIDATOR UI --- */}
+          <div className="bg-white/60 rounded-xl p-4 border border-red-100/50">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              Password Requirements
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {passwordRequirements.map((req) => (
+                <div
+                  key={req.id}
+                  className={`flex items-center gap-2 text-sm transition-colors duration-300 ${
+                    req.valid ? "text-green-700 font-medium" : "text-slate-500"
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                      req.valid
+                        ? "bg-green-100 border-green-500 text-green-600"
+                        : "bg-slate-100 border-slate-300 text-slate-300"
+                    }`}
+                  >
+                    {req.valid ? (
+                      <Check size={12} strokeWidth={3} />
+                    ) : (
+                      <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
+                    )}
+                  </div>
+                  {req.label}
+                </div>
+              ))}
+            </div>
+
+            {/* Match Confirmation */}
+            <div className="mt-4 pt-3 border-t border-slate-200/60">
+              <div
+                className={`flex items-center gap-2 text-sm font-medium transition-all ${
+                  passwordsMatch ? "text-green-600" : "text-slate-400"
+                }`}
+              >
+                {passwordsMatch ? (
+                  <Check size={16} className="text-green-500" />
+                ) : (
+                  <AlertCircle size={16} />
+                )}
+                {passwordsMatch ? "Passwords match" : "Passwords must match"}
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={handleSetPassword}
+            disabled={!isFormValid}
             className={`${buttonBase} mt-4 text-white w-full md:w-auto 
-                bg-linear-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 shadow-lg shadow-red-500/30`}
+                ${
+                  isFormValid
+                    ? "bg-linear-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 shadow-lg shadow-red-500/30 cursor-pointer"
+                    : "bg-slate-300 cursor-not-allowed opacity-70"
+                }`}
           >
             <Lock size={18} />
             Secure & Save Password

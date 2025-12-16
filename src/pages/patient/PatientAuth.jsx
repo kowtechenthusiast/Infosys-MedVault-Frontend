@@ -182,6 +182,7 @@ export default function PatientAuth() {
       const data = await res.json();
       setUserId(data.userId); // Store userId for OTP verification
       // Store email for future reference
+      console.log("userId:", userId);
 
       if (!res.ok) {
         // Includes duplicate email check
@@ -237,10 +238,10 @@ export default function PatientAuth() {
         setMessage(
           "Registration successful! Your temporary password will be emailed."
         );
-        localStorage.setItem("patientId", data.userId); // Store temporarily for pending checks
+        localStorage.setItem("userId", data.userId); // Store temporarily for pending checks
         localStorage.setItem("role", "patient");
         setRole("patient");
-        navigate("/pending"); // Navigates to a waiting page (e.g., waiting for password email/approval)
+        navigate("/patient/pending"); // Navigates to a waiting page (e.g., waiting for password email/approval)
       }
 
       // ----------------------- LOGIN -----------------------
