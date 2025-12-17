@@ -204,9 +204,10 @@ export default function PatientAuth() {
 
     try {
       // -------------------- REGISTRATION (FINAL STEP) --------------------
+      // -------------------- REGISTRATION (OTP VERIFIED) --------------------
       if (current === "register") {
         if (!isOtpSent) {
-          return handleSendOtp(); // If button is clicked and OTP isn't sent, send it first
+          return handleSendOtp();
         }
 
         const otpString = otp.join("");
@@ -214,34 +215,31 @@ export default function PatientAuth() {
           return setMessage("Please enter the 5-digit OTP.");
         }
 
-        // 2. Validate OTP and Complete Registration
         const res = await fetch(`${API_URL}/verify-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: userId,
-            role: "patient",
+            email: user.email,
             otp: otpString,
+            role: "patient",
           }),
         });
 
         const data = await res.json();
 
+        console.log("Data:", data);
+
         if (!res.ok) {
-          setMessage(
-            data.message || "OTP validation failed or registration failed."
-          );
-          return;
+          return setMessage(data.message || "OTP verification failed.");
         }
 
-        // 3. Success -> Navigate to pending/success page
-        setMessage(
-          "Registration successful! Your temporary password will be emailed."
-        );
-        localStorage.setItem("userId", data.userId); // Store temporarily for pending checks
-        localStorage.setItem("role", "patient");
-        setRole("patient");
-        navigate("/patient/pending"); // Navigates to a waiting page (e.g., waiting for password email/approval)
+        // ✅ MOVE TO SET PASSWORD PAGE WITH STATE
+        navigate("/patient/set-password", {
+          state: {
+            fullName: user.fullName,
+            email: user.email,
+          },
+        });
       }
 
       // ----------------------- LOGIN -----------------------
@@ -264,7 +262,7 @@ export default function PatientAuth() {
         // to handle the post-registration state (e.g., waiting for password)
         if (data.status === "PENDING") {
           localStorage.setItem("patientToken", data.token); // Store token for future checks
-          navigate("/pending"); // Redirect to /pending if status is PENDING
+          navigate("/patient/pending"); // Redirect to /pending if status is PENDING
         } else {
           localStorage.setItem("patientToken", data.token);
           setMessage("Login Successful!");
@@ -362,7 +360,7 @@ export default function PatientAuth() {
                     </button>
                   </>
                 )}
-                <div className="h-[40px]"></div> {/* height adjustment */}
+                <div className="h-10"></div> {/* height adjustment */}
               </>
             )}
 
