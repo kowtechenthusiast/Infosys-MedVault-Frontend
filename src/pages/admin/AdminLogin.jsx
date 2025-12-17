@@ -97,7 +97,7 @@ export default function AdminAuth() {
   const { setRole } = useAuth();
   const navigate = useNavigate();
 
-  const API_URL = "http://localhost:8080/admin";
+  const API_URL = "http://localhost:8080";
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -220,7 +220,7 @@ export default function AdminAuth() {
     setMessage("");
 
     try {
-      const res = await fetch(`${API_URL}/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, password: form.password }),

@@ -14,7 +14,7 @@ import PatientProfile from "./pages/patient/PatientProfile";
 
 // Doctor
 import DoctorAuth from "./pages/doctor/DoctorAuth";
-import DoctorPending from "./pages/doctor/DoctorPending";
+import Pending from "./pages/Pending";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 
 // Admin
@@ -22,6 +22,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DoctorProfile from "./pages/doctor/DoctorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
+import PatientSetPassword from "./pages/patient/PatientSetPassword";
 
 export default function App() {
   return (
@@ -51,10 +52,12 @@ export default function App() {
         />
         <Route path="/patient/dashboard/history" element={<PatientHistory />} />
         <Route path="/patient/dashboard/profile" element={<PatientProfile />} />
+        <Route path="/patient/pending" element={<Pending />} />
+        <Route path="/patient/set-password" element={<PatientSetPassword />} />
 
         {/* ---------------- DOCTOR ---------------- */}
         <Route path="/doctor/auth" element={<DoctorAuth />} />
-        <Route path="/pending" element={<DoctorPending />} />
+        <Route path="/doctor/pending" element={<Pending />} />
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
 
         {/* ---------------- ADMIN ---------------- */}
