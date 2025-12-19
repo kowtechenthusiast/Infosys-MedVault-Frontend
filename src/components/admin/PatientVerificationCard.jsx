@@ -9,14 +9,14 @@ import {
   Calendar,
 } from "lucide-react";
 
-// Renamed component for Admin context (AdminVerificationCard)
 export default function PatientVerificationCard({ data, role }) {
+  console.log("Patient Verification Card Data:", data);
   const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState(data.status);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // --- Dynamic Styling based on Status ---
-  const isPending = data.status === "PENDING";
+  const isPending = status === "PENDING";
 
-  // Set colors based on status (PENDING uses amber/yellow, others use slate/gray)
   const statusColors = isPending
     ? {
         border: "border-amber-200",
@@ -24,144 +24,151 @@ export default function PatientVerificationCard({ data, role }) {
         text: "text-amber-600",
         shadow: "shadow-[0_0_20px_rgba(245,158,11,0.1)]",
       }
-    : {
-        border: "border-green-200", // Changed approved state to green for positive confirmation
+    : status === "APPROVED"
+    ? {
+        border: "border-green-200",
         bg: "bg-green-50",
         text: "text-green-600",
+        shadow: "shadow-sm",
+      }
+    : {
+        border: "border-red-200",
+        bg: "bg-red-50",
+        text: "text-red-600",
         shadow: "shadow-sm",
       };
 
   const StatusIcon = isPending ? Clock : Check;
 
-  // Helper function to format date/time
   const formatTime = (timestamp) => {
     if (!timestamp) return "N/A";
+    return new Date(timestamp).toLocaleString();
+  };
+
+  // ---------------- API CALLS ----------------
+
+  const updateStatus = async (action) => {
     try {
-      return new Date(timestamp).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch (e) {
-      console.error(e);
-      return timestamp;
+      setActionLoading(true);
+
+      const res = await fetch(
+        `http://localhost:8080/api/admin/users/${data.userId}/${action}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("AdminToken")}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Action failed");
+      }
+
+      const updated = await res.json();
+      setStatus(updated.status);
+    } catch (err) {
+      alert(err.message || "Something went wrong");
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  // --- Handler functions for Admin actions ---
-  // NOTE: You need to implement the actual API calls in these functions
-  const handleGrantAccess = () => {
-    console.log(`Granting access for user: ${data.email}`);
-    // Implement API call to update user status to APPROVED/ACTIVE
+  const handleGrantAccess = (e) => {
+    e.stopPropagation();
+    updateStatus("approve");
   };
 
-  const handleDenyRequest = () => {
-    console.log(`Denying request for user: ${data.email}`);
-    // Implement API call to update user status to REJECTED/DENIED
+  const handleDenyRequest = (e) => {
+    e.stopPropagation();
+    updateStatus("reject");
   };
+
+  // ---------------- UI ----------------
 
   return (
     <div
-      className={`p-1 rounded-3xl bg-white transition-all duration-300 ${statusColors.shadow} hover:shadow-[0_0_30px_rgba(59,130,246,0.1)]`}
+      className={`p-1 rounded-3xl bg-white transition-all duration-300 ${statusColors.shadow}`}
     >
       <div
-        className={`p-5 flex justify-between items-center rounded-2xl border ${statusColors.border} transition-all duration-300 cursor-pointer 
-          hover:border-blue-300 hover:bg-blue-50/20`}
+        className={`p-5 flex justify-between items-center rounded-2xl border ${statusColors.border}
+        cursor-pointer hover:border-blue-300`}
         onClick={() => setOpen(!open)}
       >
-        {/* Left Section: Name and Role */}
+        {/* Left */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div
-            className={`p-3 rounded-full ${statusColors.bg} ${statusColors.text} flex-shrink-0`}
+            className={`p-3 rounded-full ${statusColors.bg} ${statusColors.text}`}
           >
             <User size={20} />
           </div>
-          <div className="min-w-0">
+          <div>
             <h3 className="text-xl font-bold text-slate-800 truncate">
               {data.name}
             </h3>
-            <p className="text-xs font-medium uppercase tracking-widest text-slate-500">
+            <p className="text-xs uppercase tracking-widest text-slate-500">
               {role}
             </p>
           </div>
         </div>
 
-        {/* Right Section: Status and Toggle Button */}
-        <div className="flex items-center gap-4 flex-shrink-0">
+        {/* Right */}
+        <div className="flex items-center gap-4">
           <div
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase ${statusColors.bg} ${statusColors.text}`}
           >
             <StatusIcon size={14} />
-            {data.status}
+            {status}
           </div>
           <ChevronDown
-            size={24}
-            className={`text-slate-400 transition-transform ${
+            size={22}
+            className={`transition-transform ${
               open ? "rotate-180 text-blue-600" : ""
             }`}
           />
         </div>
       </div>
 
-      {/* Expandable details */}
+      {/* Expandable */}
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          open
-            ? "max-h-96 border-t border-slate-100 mt-2 pt-4 px-5 pb-5"
-            : "max-h-0"
+        className={`overflow-hidden transition-all duration-300 ${
+          open ? "max-h-96 mt-2 pt-4 px-5 pb-5" : "max-h-0"
         }`}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-6 mb-6 text-sm text-slate-600">
-          {/* Email Address */}
-          <div className="flex items-center gap-2">
-            <Mail size={18} className="text-blue-500 shrink-0" />
-            <p>
-              <span className="font-semibold text-slate-700">Email:</span>{" "}
-              {data.email}
-            </p>
+        <div className="grid md:grid-cols-2 gap-4 text-sm text-slate-600 mb-6">
+          <div className="flex gap-2">
+            <Mail size={18} className="text-blue-500" />
+            {data.email}
           </div>
 
-          {/* Creation Time */}
-          <div className="flex items-center gap-2">
-            <Calendar size={18} className="text-teal-500 shrink-0" />
-            <p>
-              <span className="font-semibold text-slate-700">
-                Registration Date:
-              </span>{" "}
-              {formatTime(data.createdAt)}
-            </p>
+          <div className="flex gap-2">
+            <Calendar size={18} className="text-teal-500" />
+            {formatTime(data.updated_at)}
           </div>
-
-          {/* Empty column for layout balance */}
-          <div className="hidden md:block"></div>
         </div>
 
-        {/* Action Buttons (Visible only if status is PENDING) */}
         {isPending ? (
-          <div className="flex gap-4 pt-4 border-t border-slate-100">
+          <div className="flex gap-4 pt-4 border-t">
             <button
               onClick={handleGrantAccess}
-              className="px-5 py-2 bg-linear-to-r from-green-500 to-teal-500 text-white rounded-xl flex items-center gap-2 font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-green-500/30 active:scale-[0.98]"
+              disabled={actionLoading}
+              className="px-5 py-2 bg-green-600 text-white rounded-xl font-semibold disabled:opacity-50"
             >
-              <Check size={18} /> Grant Access
+              <Check size={16} /> Approve
             </button>
 
             <button
               onClick={handleDenyRequest}
-              className="px-5 py-2 bg-linear-to-r from-red-600 to-pink-500 text-white rounded-xl flex items-center gap-2 font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-red-500/30 active:scale-[0.98]"
+              disabled={actionLoading}
+              className="px-5 py-2 bg-red-600 text-white rounded-xl font-semibold disabled:opacity-50"
             >
-              <X size={18} /> Deny Request
+              <X size={16} /> Reject
             </button>
           </div>
         ) : (
-          // Message when the request has already been processed (e.g., APPROVED or REJECTED)
-          <div className="flex gap-4 pt-4 border-t border-slate-100">
-            <p className={`text-sm font-semibold ${statusColors.text} italic`}>
-              User status is **{data.status}**. No further action required.
-            </p>
-          </div>
+          <p className={`pt-4 border-t font-semibold ${statusColors.text}`}>
+            Status is {status}. No further action required.
+          </p>
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DoctorCard from "../../components/patient/DoctorCard";
 import BookingModal from "../../components/patient/BookingModal";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react"; // Import pagination icons
@@ -59,67 +59,37 @@ export default function BookAppointment() {
   const [search, setSearch] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [doctors, setDoctors] = useState([]);
   const itemsPerPage = 3;
 
   // Mock data for the doctor list (Extended for pagination demonstration)
-  const doctors = [
-    {
-      id: 1,
-      name: "Dr. Rohan Sharma",
-      specialization: "Cardiologist",
-      experience: 10,
-      rating: 4.8,
-      location: "Central Clinic A",
-    },
-    {
-      id: 2,
-      name: "Dr. Priya Sinha",
-      specialization: "Dermatologist",
-      experience: 7,
-      rating: 4.5,
-      location: "Metro Health Z",
-    },
-    {
-      id: 3,
-      name: "Dr. A. B. Chen",
-      specialization: "Neurologist",
-      experience: 15,
-      rating: 4.9,
-      location: "Central Clinic A",
-    },
-    {
-      id: 4,
-      name: "Dr. Omar Khan",
-      specialization: "Dermatologist",
-      experience: 9,
-      rating: 4.6,
-      location: "Private Clinic",
-    },
-    {
-      id: 5,
-      name: "Dr. Eva Rodriguez",
-      specialization: "Pediatrician",
-      experience: 12,
-      rating: 4.7,
-      location: "City General",
-    },
-    {
-      id: 6,
-      name: "Dr. Kenji Tanaka",
-      specialization: "Orthopedic",
-      experience: 8,
-      rating: 4.4,
-      location: "Central Clinic A",
-    },
-    {
-      id: 7,
-      name: "Dr. Sarah Lee",
-      specialization: "Cardiologist",
-      experience: 20,
-      rating: 4.9,
-      location: "Metro Health Z",
-    },
-  ];
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:8080/api/profile/doctor/getDoctors",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch doctor requests");
+        }
+
+        const data = await res.json();
+        console.log("Doctor Verification Data:", data);
+
+        setDoctors(data.doctors || []);
+      } catch (err) {
+        console.error(err.message);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
 
   // 1. Filtering Logic
   const filtered = doctors.filter(

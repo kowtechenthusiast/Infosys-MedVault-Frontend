@@ -15,7 +15,8 @@ export default function BookingModal({ doctor, onClose }) {
     specialization,
     experience = "N/A",
     rating = "N/A",
-    location = "N/A",
+    city,
+    state,
   } = doctor;
 
   return (
@@ -66,9 +67,9 @@ export default function BookingModal({ doctor, onClose }) {
             </span>
             <span className="flex items-center gap-1 col-span-2">
               <MapPin size={14} className="text-red-500" />
-              <span className="font-semibold text-slate-700">
-                {location}
-              </span>{" "}
+              <span className="font-semibold text-slate-700">{city}</span>
+              {","}
+              <span className="font-semibold text-slate-700">{state}</span>
               (Clinic Location)
             </span>
           </div>

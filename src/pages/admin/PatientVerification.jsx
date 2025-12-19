@@ -1,96 +1,81 @@
-import { Search, Filter, ChevronLeft, ChevronRight, User } from "lucide-react";
-import { useState } from "react";
+import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import PatientVerificationCard from "../../components/admin/PatientVerificationCard";
 
 export default function PatientVerification() {
-  // --- Data Definition ---
-  const ALL_PATIENT_REQUESTS = [
-    {
-      id: 201,
-      name: "Suresh Gupta",
-      email: "suresh.gupta@example.com",
-      status: "PENDING",
-      certificate: "Aadhar_9876.pdf",
-      specialization: "Proof of Identity",
-      experience: "DOB: 1985-04-12",
-      createdAt: "2025-01-10T09:15:00Z",
-    },
-    {
-      id: 202,
-      name: "Alia Bhatt",
-      email: "alia.bhatt@example.com",
-      status: "PENDING",
-      certificate: "License_4567.pdf",
-      specialization: "Proof of Residence",
-      experience: "DOB: 1999-11-20",
-      createdAt: "2025-01-12T14:20:00Z",
-    },
-    {
-      id: 203,
-      name: "Ravi Kishan",
-      email: "ravi.kishan@example.com",
-      status: "PENDING",
-      certificate: "VoterID_1234.pdf",
-      specialization: "Proof of Identity",
-      experience: "DOB: 1975-01-01",
-      createdAt: "2025-01-15T08:45:00Z",
-    },
-    {
-      id: 204,
-      name: "Deepika Padukone",
-      email: "deepika.padukone@example.com",
-      status: "PENDING",
-      certificate: "Passport_5678.pdf",
-      specialization: "Proof of Residence",
-      experience: "DOB: 1986-07-06",
-      createdAt: "2025-01-17T11:30:00Z",
-    },
-    {
-      id: 205,
-      name: "Rahul Singh",
-      email: "rahul.singh@example.com",
-      status: "PENDING",
-      certificate: "Aadhar_0011.pdf",
-      specialization: "Proof of Identity",
-      experience: "DOB: 2001-05-15",
-      createdAt: "2025-01-19T16:10:00Z",
-    },
-  ];
+  // --- State ---
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // --- Pagination Logic ---
+  // --- Pagination ---
   const RECORDS_PER_PAGE = 4;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Calculate total pages
-  const totalRecords = ALL_PATIENT_REQUESTS.length;
+  // --- Fetch from backend ---
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:8080/api/profile/patient/getPending",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch patient requests");
+        }
+
+        const data = await res.json();
+        console.log("Patient Verification Data:", data);
+        setPatients(data.patients || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
+  // --- Pagination calculations ---
+  const totalRecords = patients.length;
   const totalPages = Math.ceil(totalRecords / RECORDS_PER_PAGE);
 
-  // Get current page data
   const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
   const endIndex = startIndex + RECORDS_PER_PAGE;
-  const currentRequests = ALL_PATIENT_REQUESTS.slice(startIndex, endIndex);
+  const currentRequests = patients.slice(startIndex, endIndex);
 
-  // Pagination Handlers
-  const goToPrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
+  // --- Pagination handlers ---
+  const goToPrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
 
-  const goToNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
+  const goToNextPage = () => setCurrentPage((p) => Math.min(p + 1, totalPages));
+
+  // --- UI States ---
+  if (loading) {
+    return <p className="text-slate-500">Loading patients...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-600">{error}</p>;
+  }
 
   return (
     <div className="space-y-8">
-      {/* Thematic Header and Controls */}
+      {/* Header */}
       <div className="pb-4 border-b border-slate-50">
-        <h2 className="text-3xl font-bold text-slate-800 tracking-tight mb-4">
+        <h2 className="text-3xl font-bold text-slate-800 mb-4">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
             Patient Identity Verification
           </span>
         </h2>
 
-        {/* Search and Filter Bar */}
-        <div className="flex items-center gap-4">
+        {/* Search & Filter (UI only for now) */}
+        <div className="flex gap-4">
           <div className="relative flex-1">
             <Search
               size={18}
@@ -98,57 +83,49 @@ export default function PatientVerification() {
             />
             <input
               type="text"
-              placeholder="Search patients by name or ID proof..."
-              className="w-full py-2 pl-10 pr-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+              placeholder="Search patients..."
+              className="w-full py-2 pl-10 pr-4 border rounded-xl text-sm"
             />
           </div>
 
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-slate-700 shadow-[0_4px_15px_rgba(30,41,59,0.2)] flex-shrink-0">
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm">
             <Filter size={18} />
             Filter Proof Type
           </button>
         </div>
       </div>
 
-      {/* Verification List (Using Paginated Data) */}
+      {/* List */}
       <div className="space-y-6">
         {currentRequests.map((patient) => (
           <PatientVerificationCard
-            key={patient.id}
+            key={patient.userId}
             data={patient}
-            // Using 'patient' as the role for dynamic card rendering
             role="patient"
           />
         ))}
       </div>
 
-      {/* Footer / Summary Action & Pagination Controls */}
+      {/* Pagination */}
       {totalRecords > 0 && (
-        <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center">
-          {/* Summary Text (Thematic Update) */}
-          <p className="text-sm text-slate-500 flex items-center gap-1">
-            <span className="text-slate-800 font-semibold tracking-wide">
-              Identity Queue:
-            </span>
-            <span className="text-red-600 font-bold">Reviewing Block</span>
-            <span className="text-slate-700">
-              **{startIndex + 1} to {Math.min(endIndex, totalRecords)}**
-            </span>
-            <span className="text-slate-500">
-              (Total Patients: **{totalRecords}**)
-            </span>
+        <div className="mt-8 pt-4 border-t flex justify-between items-center">
+          <p className="text-sm text-slate-500">
+            Showing{" "}
+            <strong>
+              {startIndex + 1}–{Math.min(endIndex, totalRecords)}
+            </strong>{" "}
+            of <strong>{totalRecords}</strong>
           </p>
 
-          {/* Pagination Controls */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-semibold text-slate-700 mr-2 hidden sm:inline">
+            <span className="text-sm font-semibold">
               Page {currentPage} of {totalPages}
             </span>
 
             <button
               onClick={goToPrevPage}
               disabled={currentPage === 1}
-              className="p-2 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-full hover:bg-slate-100 disabled:opacity-50"
             >
               <ChevronLeft size={18} />
             </button>
@@ -156,7 +133,7 @@ export default function PatientVerification() {
             <button
               onClick={goToNextPage}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-full hover:bg-slate-100 disabled:opacity-50"
             >
               <ChevronRight size={18} />
             </button>

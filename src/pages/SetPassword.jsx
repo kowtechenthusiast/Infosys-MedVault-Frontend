@@ -1,21 +1,25 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Lock, Check, AlertCircle } from "lucide-react";
+import { useAuth } from "../context/useAuthContext";
 
-export default function PatientSetPassword() {
+export default function SetPassword() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const { setRole } = useAuth();
 
-  const { fullName, email } = state || {};
+  const { fullName, email, role } = state || {};
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  if (!email) {
-    navigate("/patient/auth");
-    return null;
-  }
+  // ✅ Redirect if email missing
+  useEffect(() => {
+    if (!email) {
+      navigate(`/${role}/auth`, { replace: true });
+    }
+  }, [email, navigate]);
 
   // ---- PASSWORD RULES ----
   const rules = [
@@ -39,18 +43,35 @@ export default function PatientSetPassword() {
         name: fullName,
         email,
         password,
-        role: "patient",
+        role: role,
       }),
     });
 
     const data = await res.json();
+    console.log(data);
 
     if (!res.ok) {
       return setMessage(data.message || "Registration failed");
     }
 
-    navigate("/patient/dashboard");
+    localStorage.setItem("userId", data.userId);
+    localStorage.setItem("role", data.role.toLowerCase());
+
+    setRole(data.role.toLowerCase());
   };
+
+  // ✅ Navigate only AFTER auth state is stable
+  useEffect(() => {
+    if (
+      localStorage.getItem("role") === role &&
+      localStorage.getItem("userId")
+    ) {
+      navigate(`/${role}/profile`, { replace: true });
+    }
+  }, [navigate, role]);
+
+  // ✅ Safe render (no early return)
+  if (!email) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-100 to-pink-100 p-6">
