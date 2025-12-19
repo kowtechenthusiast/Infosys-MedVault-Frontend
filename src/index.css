@@ -9,4 +9,17 @@
   .btn-primary {
     @apply w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700;
   }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slideIn {
+    animation: slideIn 0.3s ease-out;
+  }
 }

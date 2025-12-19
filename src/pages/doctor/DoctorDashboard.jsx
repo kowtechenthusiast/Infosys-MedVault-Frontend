@@ -4,6 +4,7 @@ import DoctorOverview from "./DoctorOverview";
 import UpcomingAppointments from "./UpcomingAppointments";
 import AppointmentHistory from "./AppointmentHistory";
 import SimpleFooter from "../../components/SimpleFooter";
+import SlotManager from "./SlotManager";
 
 // Sample Data
 const USER_INFO = {
@@ -34,6 +35,7 @@ export default function DoctorDashboard() {
           {current === "overview" && <DoctorOverview userInfo={USER_INFO} />}
           {current === "upcoming" && <UpcomingAppointments />}
           {current === "history" && <AppointmentHistory />}
+          {current === "slots" && <SlotManager />}
         </div>
 
         {/* === FOOTER === */}

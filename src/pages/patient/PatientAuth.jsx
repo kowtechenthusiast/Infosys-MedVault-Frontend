@@ -126,7 +126,7 @@ function LoginHelper() {
 export default function PatientAuth() {
   const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
-  const { setRole } = useAuth();
+  const { setRole } = useAuth("");
   const [userId, setUserId] = useState(0);
   const navigate = useNavigate();
 
@@ -238,6 +238,7 @@ export default function PatientAuth() {
           state: {
             fullName: user.fullName,
             email: user.email,
+            role: "patient",
           },
         });
       }
@@ -260,13 +261,15 @@ export default function PatientAuth() {
         // Revised Login Logic
         // Assuming the patient login response also has a 'status' or similar field
         // to handle the post-registration state (e.g., waiting for password)
+        localStorage.setItem("userId", data.userId);
+        localStorage.setItem("role", "patient");
+        localStorage.setItem("patientToken", data.token);
+        setRole("patient");
+
         if (data.status === "PENDING") {
-          localStorage.setItem("patientToken", data.token); // Store token for future checks
           navigate("/patient/pending"); // Redirect to /pending if status is PENDING
         } else {
-          localStorage.setItem("patientToken", data.token);
           setMessage("Login Successful!");
-          setRole("patient");
           navigate("/patient/dashboard"); // Redirect to /dashboard if status is APPROVED/ACTIVE
         }
       }

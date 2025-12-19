@@ -6,15 +6,20 @@ import {
   Phone,
   Calendar,
   ShieldCheck,
-  CheckCircle,
-  Key,
   ClipboardSignature,
   Stethoscope,
   FileBadge,
   Building,
+  MapPin,
+  GraduationCap,
+  UploadCloud,
+  CheckCircle2,
+  Eye,
+  AlertCircle,
+  IndianRupee,
 } from "lucide-react";
 
-// === Reusable Input Component ===
+/* ================= REUSABLE MODERN INPUT ================= */
 const ProfileInput = memo(
   ({
     icon: Icon,
@@ -25,32 +30,44 @@ const ProfileInput = memo(
     disabled,
     onChange,
     readOnly = false,
+    error,
   }) => (
-    <div>
-      <label className="block text-xs font-semibold uppercase text-slate-500 mb-1 flex items-center gap-2">
-        <Icon size={14} className="text-blue-500" /> {label}
+    <div className="group relative">
+      <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 transition-colors group-focus-within:text-blue-500">
+        <Icon size={14} /> {label}
       </label>
-
-      <input
-        type={type}
-        name={name}
-        value={value}
-        readOnly={readOnly}
-        disabled={disabled}
-        onChange={onChange}
-        className={`w-full text-base font-medium px-4 py-2 rounded-xl transition-all duration-300
+      <div className="relative">
+        <input
+          type={type}
+          name={name}
+          value={value || ""}
+          readOnly={readOnly}
+          disabled={disabled}
+          onChange={onChange}
+          className={`w-full px-4 py-3 rounded-xl font-medium outline-none transition-all duration-300
           ${
             disabled || readOnly
-              ? "bg-slate-100 border border-slate-200 text-slate-700 cursor-not-allowed"
-              : "bg-white border border-blue-300 shadow-inner text-slate-900"
+              ? "bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed"
+              : error
+              ? "bg-white border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 shadow-sm"
+              : "bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm"
           }`}
-      />
+        />
+        {error && (
+          <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1 font-semibold">
+            <AlertCircle size={10} /> {error}
+          </p>
+        )}
+      </div>
     </div>
   )
 );
 
 export default function DoctorProfile() {
-  const doctorId = localStorage.getItem("doctorId");
+  const doctorId = localStorage.getItem("userId");
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -68,108 +85,89 @@ export default function DoctorProfile() {
     state: "",
     country: "",
     pincode: "",
-    password: "",
-    profilePhoto: null,
-    medicalLicense: null,
-    degreeCertificates: null,
+    medicalLicense: null, // New file upload
+    medicalLicenseUrl: "", // Existing file path from server
+    consultationFee: "",
   });
 
-  const [isEditing, setIsEditing] = useState(false);
+  const specializationOptions = [
+    "Cardiology",
+    "Dermatology",
+    "Endocrinology",
+    "Gastroenterology",
+    "General Physician",
+    "Neurology",
+    "Orthopedics",
+    "Pediatrics",
+    "Psychiatry",
+  ];
 
-  // --- Fetch doctor profile ---
+  /* ================= FETCH DATA FROM BACKEND ================= */
   useEffect(() => {
-    async function fetchData() {
+    const fetchProfile = async () => {
+      if (!doctorId) return;
       try {
         const res = await fetch(
           `http://localhost:8080/api/profile/doctor/${doctorId}`
         );
-
-        if (!res.ok) throw new Error("Failed to fetch doctor profile");
-
+        if (!res.ok) throw new Error("Failed to load profile");
         const data = await res.json();
-
-        setFormData((prev) => ({
-          ...prev,
+        console.log("Doctor Profile Data:", data);
+        setFormData({
           ...data,
-        }));
-      } catch (err) {
-        console.error("Error fetching doctor profile:", err);
-      }
-    }
+          dateOfBirth: data.dateOfBirth ? data.dateOfBirth.split("T")[0] : "",
+          medicalLicenseUrl: data.medicalLicense || "", // Adjust based on your API key
+        });
 
-    if (doctorId) fetchData();
+        console.log("Form Data Set:", {
+          ...data,
+          dateOfBirth: data.dateOfBirth ? data.dateOfBirth.split("T")[0] : "",
+          medicalLicenseUrl: data.medicalLicense || "",
+        });
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+    fetchProfile();
   }, [doctorId]);
 
-  // --- Handle form field change ---
+  /* ================= VALIDATION LOGIC ================= */
+  const validateForm = () => {
+    let tempErrors = {};
+    if (!formData.phone) tempErrors.phone = "Phone number is required";
+    else if (!/^\d{10}$/.test(formData.phone))
+      tempErrors.phone = "Must be 10 digits";
+
+    if (!formData.specialization)
+      tempErrors.specialization = "Please select a specialization";
+    if (!formData.medicalRegistrationNumber)
+      tempErrors.medicalRegistrationNumber = "Registration number is required";
+    if (!formData.city) tempErrors.city = "City is required";
+    if (formData.experience < 0) tempErrors.experience = "Invalid experience";
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
+
+  /* ================= HANDLERS ================= */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: files ? files[0] : value,
     }));
+    // Clear error when user types
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
-  // --- Save Updated Profile ---
   const handleSave = async () => {
-    if (!formData.password) {
-      alert("❗ Password is required to update your profile.");
-      return;
-    }
-    if (!formData.medicalLicense || !formData.degreeCertificates) {
-      alert("❗ Medical license and degree certificates are required.");
-      return;
-    }
+    if (!validateForm()) return;
 
-    const body = new FormData();
-    body.append("userId", doctorId);
-    body.append("password", formData.password);
-    body.append("dateOfBirth", formData.dateOfBirth);
-    body.append("gender", formData.gender);
-    body.append(
-      "medicalRegistrationNumber",
-      formData.medicalRegistrationNumber
-    );
-    body.append("licensingAuthority", formData.licensingAuthority);
-    body.append("specialization", formData.specialization);
-    body.append("qualification", formData.qualification);
-    body.append("experience", formData.experience);
-    body.append("phone", formData.phone);
-    body.append("clinicHospitalName", formData.clinicHospitalName);
-    body.append("city", formData.city);
-    body.append("state", formData.state);
-    body.append("country", formData.country);
-    body.append("pincode", formData.pincode);
+    setLoading(true);
+    const data = new FormData();
+    data.append("userId", doctorId);
 
-    if (formData.profilePhoto)
-      body.append("profilePhoto", formData.profilePhoto);
-    body.append("medicalLicense", formData.medicalLicense);
-    body.append("degreeCertificates", formData.degreeCertificates);
-
-    try {
-      const res = await fetch("http://localhost:8080/api/profile/doctor", {
-        method: "PUT",
-        body,
-      });
-
-      const data = await res.json();
-      console.log("Updated:", data);
-
-      if (data.success) {
-        alert("Doctor profile updated successfully!");
-        setIsEditing(false);
-      } else {
-        alert(data.message || "Update failed");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // --- Profile Completion ---
-  const profileCompletion = useMemo(() => {
-    const requiredFields = [
-      "name",
+    const fields = [
       "phone",
       "dateOfBirth",
       "gender",
@@ -178,6 +176,7 @@ export default function DoctorProfile() {
       "specialization",
       "qualification",
       "experience",
+      "consultationFee",
       "clinicHospitalName",
       "city",
       "state",
@@ -185,258 +184,420 @@ export default function DoctorProfile() {
       "pincode",
     ];
 
-    const filled = requiredFields.filter(
-      (f) => formData[f] && formData[f] !== ""
-    ).length;
+    fields.forEach((field) => data.append(field, formData[field] || ""));
 
-    return Math.floor((filled / requiredFields.length) * 100);
+    if (formData.medicalLicense instanceof File) {
+      data.append("medicalLicense", formData.medicalLicense);
+    }
+
+    console.log("Fee:", formData.consultationFee);
+
+    try {
+      const res = await fetch("http://localhost:8080/api/profile/doctor", {
+        method: "PUT",
+        body: data,
+      });
+
+      if (!res.ok) throw new Error("Update failed");
+
+      alert("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      alert("Error updating profile. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= PROGRESS CALCULATION ================= */
+  const profileCompletion = useMemo(() => {
+    const essential = [
+      "name",
+      "email",
+      "phone",
+      "dateOfBirth",
+      "gender",
+      "medicalRegistrationNumber",
+      "specialization",
+      "experience",
+      "consultationFee",
+      "clinicHospitalName",
+      "city",
+      "medicalLicense",
+    ];
+    const filled = essential.filter((f) => {
+      if (f === "medicalLicense")
+        return formData.medicalLicense || formData.medicalLicenseUrl;
+      return formData[f] && formData[f].toString().trim() !== "";
+    }).length;
+    return Math.floor((filled / essential.length) * 100);
   }, [formData]);
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
-      <h2 className="text-3xl font-extrabold text-slate-800 pb-3 border-b border-blue-100">
-        🩺 Doctor Profile & Professional Data
-      </h2>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* LEFT SIDE */}
-        <div className="space-y-6">
-          <div className="p-6 bg-white border rounded-2xl shadow-xl">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <ShieldCheck size={20} className="text-green-500" /> Profile
-              Status
-            </h3>
-
-            <div className="flex justify-between mb-2">
-              <span className="font-semibold">Completion</span>
-              <span className="text-2xl font-extrabold text-blue-600">
-                {profileCompletion}%
+    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 font-sans text-slate-900">
+      <div className="max-w-6xl mx-auto">
+        {/* HEADER */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
+              <span className="bg-blue-600 text-white p-2 rounded-2xl shadow-lg">
+                <Stethoscope size={32} />
               </span>
-            </div>
-
-            <div className="w-full h-3 bg-slate-200 rounded-full">
-              <div
-                className="h-3 bg-green-400 rounded-full transition-all"
-                style={{ width: `${profileCompletion}%` }}
-              ></div>
-            </div>
+              Doctor Profile
+            </h1>
           </div>
 
-          <div className="p-6 bg-white rounded-2xl border space-y-3">
-            {isEditing ? (
-              <button
-                onClick={handleSave}
-                className="w-full bg-green-600 text-white py-3 rounded-xl font-bold"
-              >
-                💾 Save Changes
-              </button>
+          <button
+            onClick={isEditing ? handleSave : () => setIsEditing(true)}
+            disabled={loading}
+            className={`px-8 py-3.5 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-xl ${
+              isEditing
+                ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                : "bg-slate-900 hover:bg-slate-800 text-white"
+            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {loading ? (
+              "Processing..."
+            ) : isEditing ? (
+              <>
+                <CheckCircle2 size={18} /> Save Changes
+              </>
             ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold"
-              >
-                ✏️ Edit Profile
-              </button>
+              "Edit Profile"
             )}
-          </div>
-        </div>
+          </button>
+        </header>
 
-        {/* RIGHT SIDE FORM */}
-        <div className="lg:col-span-2 p-8 bg-white border rounded-2xl space-y-6">
-          <h3 className="text-2xl font-bold text-blue-700 border-b pb-2">
-            Personal Details
-          </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* LEFT: COMPLETION BAR */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white p-8 rounded-4xl shadow-sm border border-slate-100 relative overflow-hidden">
+              <div className="flex justify-between items-end mb-4">
+                <h3 className="font-bold text-slate-800 text-lg">
+                  Profile Strength
+                </h3>
+                <span className="text-3xl font-black text-blue-600">
+                  {profileCompletion}%
+                </span>
+              </div>
+              <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1">
+                <div
+                  className="h-full rounded-full bg-linear-to-r from-blue-500 to-indigo-500 transition-all duration-1000"
+                  style={{ width: `${profileCompletion}%` }}
+                />
+              </div>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ProfileInput
-              icon={User}
-              label="Full Name"
-              name="name"
-              value={formData.name}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-
-            <ProfileInput
-              icon={Mail}
-              label="Email"
-              name="email"
-              value={formData.email}
-              readOnly
-            />
-
-            <ProfileInput
-              icon={Phone}
-              label="Phone"
-              name="phone"
-              value={formData.phone}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-
-            <ProfileInput
-              icon={Calendar}
-              type="date"
-              label="Date of Birth"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+            <div className="bg-indigo-900 p-8 rounded-4xl text-white">
+              <ShieldCheck className="text-indigo-300 mb-4" size={40} />
+              <h4 className="text-xl font-bold mb-2">Verification Status</h4>
+              <p className="text-indigo-200 text-sm mb-6">
+                Details are encrypted and stored securely.
+              </p>
+              <div className="flex items-center gap-3 text-sm font-medium">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                Verified Partner
+              </div>
+            </div>
           </div>
 
-          <h3 className="text-2xl font-bold text-blue-700 border-b pb-2 mt-6">
-            Professional Details
-          </h3>
+          {/* RIGHT: FORM */}
+          <div className="lg:col-span-8 space-y-8">
+            <div className="bg-white p-8 md:p-10 rounded-4xl shadow-sm border border-slate-100">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-10 w-1.5 bg-blue-600 rounded-full" />
+                <h3 className="text-2xl font-bold text-slate-800">
+                  Personal & Professional Details
+                </h3>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ProfileInput
-              icon={ClipboardSignature}
-              label="Medical Registration Number"
-              name="medicalRegistrationNumber"
-              value={formData.medicalRegistrationNumber}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+              <div className="grid md:grid-cols-2 gap-8">
+                <ProfileInput
+                  icon={User}
+                  label="Full Name"
+                  value={formData.name}
+                  readOnly
+                />
+                <ProfileInput
+                  icon={Mail}
+                  label="Email"
+                  value={formData.email}
+                  readOnly
+                />
 
-            <ProfileInput
-              icon={FileBadge}
-              label="Licensing Authority"
-              name="licensingAuthority"
-              value={formData.licensingAuthority}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+                <ProfileInput
+                  icon={Phone}
+                  label="Phone"
+                  name="phone"
+                  value={formData.phone}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                  error={errors.phone}
+                />
+                <ProfileInput
+                  icon={Calendar}
+                  type="date"
+                  label="DOB"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                />
 
-            <ProfileInput
-              icon={Stethoscope}
-              label="Specialization"
-              name="specialization"
-              value={formData.specialization}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+                {/* Gender Select */}
+                <div className="group relative">
+                  <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 transition-colors group-focus-within:text-blue-500">
+                    <User size={14} /> Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    disabled={!isEditing}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl font-medium outline-none transition-all duration-300 bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
 
-            <ProfileInput
-              icon={Stethoscope}
-              label="Qualification"
-              name="qualification"
-              value={formData.qualification}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+                {/* Specialization Select */}
+                <div className="group relative">
+                  <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 transition-colors group-focus-within:text-blue-500">
+                    <Stethoscope size={14} /> Specialization
+                  </label>
 
-            <ProfileInput
-              icon={Stethoscope}
-              type="number"
-              label="Experience (Years)"
-              name="experience"
-              value={formData.experience}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-          </div>
+                  {!isEditing ? (
+                    /* READ-ONLY VIEW: Shows as a clean input when not editing */
+                    <input
+                      type="text"
+                      value={formData.specialization || "Not Specified"}
+                      readOnly
+                      className="w-full px-4 py-3 rounded-xl font-medium outline-none transition-all duration-300 bg-slate-50 border border-slate-200 text-slate-500 cursor-not-allowed shadow-sm"
+                    />
+                  ) : (
+                    /* EDIT VIEW: Shows the dropdown selection */
+                    <select
+                      name="specialization"
+                      value={formData.specialization}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-3 rounded-xl font-medium outline-none transition-all duration-300 bg-white border ${
+                        errors.specialization
+                          ? "border-red-400"
+                          : "border-slate-200"
+                      } focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm`}
+                    >
+                      <option value="">Select Specialization</option>
+                      {specializationOptions.map((spec) => (
+                        <option key={spec} value={spec}>
+                          {spec}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-          <h3 className="text-2xl font-bold text-blue-700 border-b pb-2 mt-6">
-            Clinic / Hospital Details
-          </h3>
+                  {isEditing && errors.specialization && (
+                    <p className="text-[10px] text-red-500 mt-1 font-semibold">
+                      {errors.specialization}
+                    </p>
+                  )}
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ProfileInput
-              icon={Building}
-              label="Clinic/Hospital Name"
-              name="clinicHospitalName"
-              value={formData.clinicHospitalName}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+                <ProfileInput
+                  icon={ClipboardSignature}
+                  label="Reg No."
+                  name="medicalRegistrationNumber"
+                  value={formData.medicalRegistrationNumber}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                  error={errors.medicalRegistrationNumber}
+                />
+                <ProfileInput
+                  icon={FileBadge}
+                  label="Licensing Authority"
+                  name="licensingAuthority"
+                  value={formData.licensingAuthority}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                />
 
-            <ProfileInput
-              icon={Mail}
-              label="City"
-              name="city"
-              value={formData.city}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+                <ProfileInput
+                  icon={GraduationCap}
+                  label="Qualification"
+                  name="qualification"
+                  value={formData.qualification}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                />
 
-            <ProfileInput
-              icon={Mail}
-              label="State"
-              name="state"
-              value={formData.state}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+                <ProfileInput
+                  icon={ShieldCheck}
+                  type="number"
+                  label="Experience (Years)"
+                  name="experience"
+                  value={formData.experience}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                  error={errors.experience}
+                />
 
-            <ProfileInput
-              icon={Mail}
-              label="Country"
-              name="country"
-              value={formData.country}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
+                <ProfileInput
+                  icon={IndianRupee}
+                  type="number"
+                  label="Consultation Fee ($)"
+                  name="consultationFee"
+                  value={formData.consultationFee}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                  error={errors.consultationFee}
+                />
 
-            <ProfileInput
-              icon={Mail}
-              label="Pincode"
-              name="pincode"
-              value={formData.pincode}
-              disabled={!isEditing}
-              onChange={handleChange}
-            />
-          </div>
+                <ProfileInput
+                  icon={Building}
+                  label="Clinic Name"
+                  name="clinicHospitalName"
+                  value={formData.clinicHospitalName}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                />
 
-          {/* File Uploads */}
-          {isEditing && (
-            <>
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Profile Photo (Optional)
-                </label>
-                <input
-                  type="file"
-                  name="profilePhoto"
+                <ProfileInput
+                  icon={MapPin}
+                  label="City"
+                  name="city"
+                  value={formData.city}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                  error={errors.city}
+                />
+                <ProfileInput
+                  icon={MapPin}
+                  label="State"
+                  name="state"
+                  value={formData.state}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                />
+
+                <ProfileInput
+                  icon={MapPin}
+                  label="Country"
+                  name="country"
+                  value={formData.country}
+                  disabled={!isEditing}
+                  onChange={handleChange}
+                />
+                <ProfileInput
+                  icon={MapPin}
+                  label="Pincode"
+                  name="pincode"
+                  value={formData.pincode}
+                  disabled={!isEditing}
                   onChange={handleChange}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Medical License (PDF / Image)
+              {/* MODERN FILE UPLOAD & VIEW */}
+              <div className="mt-10 pt-10 border-t border-slate-100">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4">
+                  Medical License (PDF/JPG)
                 </label>
-                <input
-                  type="file"
-                  name="medicalLicense"
-                  required
-                  onChange={handleChange}
-                />
-              </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <input
+                    type="file"
+                    id="license"
+                    name="medicalLicense"
+                    className="hidden"
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                  <label
+                    htmlFor="license"
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                      !isEditing
+                        ? "bg-slate-100 text-slate-400"
+                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                    }`}
+                  >
+                    <UploadCloud size={18} />
+                    {formData.medicalLicense?.name || "Upload New Document"}
+                  </label>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Degree Certificates (PDF / Image)
-                </label>
-                <input
-                  type="file"
-                  name="degreeCertificates"
-                  required
-                  onChange={handleChange}
-                />
-              </div>
+                  {/* View Existing License Button */}
+                  {/* View Existing License Button */}
+                  {formData.medicalLicenseUrl && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* VIEW BUTTON */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const baseUrl = "http://localhost:8080";
+                          const filePath =
+                            formData.medicalLicenseUrl.startsWith("/")
+                              ? formData.medicalLicenseUrl
+                              : `/${formData.medicalLicenseUrl}`;
+                          window.open(`${baseUrl}${filePath}`, "_blank");
+                        }}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200 shadow-sm"
+                      >
+                        <Eye size={16} /> View
+                      </button>
 
-              {/* Password */}
-              <ProfileInput
-                icon={Key}
-                label="Password (Required for update)"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </>
-          )}
+                      {/* DOWNLOAD BUTTON */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const baseUrl = "http://localhost:8080";
+                            const filePath =
+                              formData.medicalLicenseUrl.startsWith("/")
+                                ? formData.medicalLicenseUrl
+                                : `/${formData.medicalLicenseUrl}`;
+                            const fileUrl = `${baseUrl}${filePath}`;
+
+                            // Fetch the file as a blob to force download
+                            const response = await fetch(fileUrl);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.href = url;
+
+                            // Set filename from the URL path
+                            const fileName = filePath.split("/").pop();
+                            link.setAttribute(
+                              "download",
+                              fileName || "medical-license"
+                            );
+
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            window.URL.revokeObjectURL(url);
+                          } catch (err) {
+                            console.error("Download failed:", err);
+                            alert("Could not download file.");
+                          }
+                        }}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-100 shadow-sm"
+                      >
+                        <UploadCloud size={16} className="rotate-180" />{" "}
+                        Download
+                      </button>
+                    </div>
+                  )}
+
+                  {isEditing && formData.medicalLicense && (
+                    <span className="text-xs text-emerald-600 font-bold italic">
+                      New File Selected
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

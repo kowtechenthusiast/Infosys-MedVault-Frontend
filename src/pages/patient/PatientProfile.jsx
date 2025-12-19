@@ -12,7 +12,6 @@ export default function PatientProfile() {
 
   const [activeTab, setActiveTab] = useState("basic");
   const [isEditing, setIsEditing] = useState(false);
-  const [mustSetPasswordFirst, setMustSetPasswordFirst] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -26,7 +25,6 @@ export default function PatientProfile() {
     state: "",
     country: "",
     pincode: "",
-    password: "",
 
     sleepHours: "",
     diet: "",
@@ -37,9 +35,6 @@ export default function PatientProfile() {
     bpDia: "",
     spo2: "",
     heartRate: "",
-
-    initialPassword: "",
-    confirmPassword: "",
   });
 
   // -------------------------------------------
@@ -60,26 +55,20 @@ export default function PatientProfile() {
         const data = await res.json();
         console.log("Profile API Response:", data);
 
-        // CASE 1 — Profile not completed
+        // CASE 1 — Profile wrapper response
         if (data.success === false && data.response) {
-          const base = data.response;
-
           setFormData((prev) => ({
             ...prev,
-            ...base,
+            ...data.response,
           }));
-
-          setMustSetPasswordFirst(!base.password);
           return;
         }
 
-        // CASE 2 — Profile exists
+        // CASE 2 — Normal profile
         setFormData((prev) => ({
           ...prev,
           ...data,
         }));
-
-        setMustSetPasswordFirst(!data.password);
       } catch (error) {
         console.error("Failed to fetch profile", error);
       }
@@ -92,54 +81,9 @@ export default function PatientProfile() {
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   // -------------------------------------------
-  // SET PASSWORD FIRST TIME
-  // -------------------------------------------
-  const handleSetPassword = async () => {
-    if (!formData.initialPassword || !formData.confirmPassword) {
-      alert("Enter both password fields.");
-      return;
-    }
-
-    if (formData.initialPassword !== formData.confirmPassword) {
-      alert("Passwords do not match.");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost:8080/api/auth/set-password", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: patientId,
-          password: formData.initialPassword,
-        }),
-      });
-
-      if (res.ok) {
-        alert("Password set successfully!");
-        setFormData((p) => ({
-          ...p,
-          password: formData.initialPassword,
-          initialPassword: "",
-          confirmPassword: "",
-        }));
-        setMustSetPasswordFirst(false);
-      } else {
-        alert("Error setting password.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Network error.");
-    }
-  };
-
-  // -------------------------------------------
-  // GENERAL PROFILE UPDATE HANDLER
+  // SAVE PROFILE
   // -------------------------------------------
   const saveProfile = async () => {
-    const fd = new FormData();
-
-    // Combine only allowed backend fields
     const allowedFields = [
       "dateOfBirth",
       "gender",
@@ -169,8 +113,6 @@ export default function PatientProfile() {
       }
     });
 
-    fd.append("data", JSON.stringify(requestObject));
-
     try {
       const res = await fetch(
         "http://localhost:8080/api/profile/patient/complete-profile",
@@ -199,18 +141,13 @@ export default function PatientProfile() {
   const logout = () => alert("Logged out!");
 
   // -------------------------------------------
-  // UI RENDER
+  // UI
   // -------------------------------------------
   return (
-    <div className="min-h-screen relative bg-slate-50 overflow-hidden font-sans selection:bg-blue-200">
-      {/* Ambient Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-200/40 rounded-full blur-[100px]" />
-      <div className="absolute top-[20%] right-[-5%] w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-cyan-100/50 rounded-full blur-[100px]" />
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 lg:py-12">
+    <div className="min-h-screen relative bg-slate-50 overflow-hidden font-sans">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         <div className="mb-10 ml-2">
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-slate-800 via-blue-800 to-indigo-800 tracking-tight">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-slate-800 via-blue-800 to-indigo-800">
             Patient Profile
           </h1>
           <p className="text-slate-500 mt-2 text-lg">
@@ -220,65 +157,51 @@ export default function PatientProfile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1">
-            <SidebarTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              mustSetPasswordFirst={mustSetPasswordFirst}
-            />
+            <SidebarTabs activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
 
           <div className="lg:col-span-3">
-            <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-[2.5rem] shadow-xl p-8 lg:p-10 min-h-[600px] relative">
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {activeTab === "basic" && (
-                  <BasicDetails
-                    formData={formData}
-                    handleChange={handleChange}
-                    isEditing={isEditing}
-                    setIsEditing={setIsEditing}
-                    handleSave={saveProfile}
-                    mustSetPasswordFirst={mustSetPasswordFirst}
-                    handleSetPassword={handleSetPassword}
-                  />
-                )}
+            <div className="bg-white/70 backdrop-blur-xl border rounded-[2.5rem] shadow-xl p-8 min-h-[600px]">
+              {activeTab === "basic" && (
+                <BasicDetails
+                  formData={formData}
+                  handleChange={handleChange}
+                  isEditing={isEditing}
+                  setIsEditing={setIsEditing}
+                  handleSave={saveProfile}
+                />
+              )}
 
-                {activeTab === "lifestyle" && (
-                  <LifestyleInfo
-                    formData={formData}
-                    handleChange={handleChange}
-                    handleSave={saveProfile}
-                    mustSetPasswordFirst={mustSetPasswordFirst}
-                  />
-                )}
+              {activeTab === "lifestyle" && (
+                <LifestyleInfo
+                  formData={formData}
+                  handleChange={handleChange}
+                  handleSave={saveProfile}
+                />
+              )}
 
-                {activeTab === "health" && (
-                  <HealthMetrics
-                    formData={formData}
-                    handleChange={handleChange}
-                    handleSave={saveProfile}
-                    mustSetPasswordFirst={mustSetPasswordFirst}
-                  />
-                )}
+              {activeTab === "health" && (
+                <HealthMetrics
+                  formData={formData}
+                  handleChange={handleChange}
+                  handleSave={saveProfile}
+                />
+              )}
 
-                {activeTab === "records" && (
-                  <MedicalRecords
-                    patientId={patientId}
-                    mustSetPasswordFirst={mustSetPasswordFirst}
-                  />
-                )}
+              {activeTab === "records" && (
+                <MedicalRecords patientId={patientId} />
+              )}
 
-                {activeTab === "settings" && (
-                  <AccountSettings
-                    formData={formData}
-                    handleChange={handleChange}
-                    updateEmail={updateEmail}
-                    updatePassword={updatePassword}
-                    deleteAccount={deleteAccount}
-                    logout={logout}
-                    mustSetPasswordFirst={mustSetPasswordFirst}
-                  />
-                )}
-              </div>
+              {activeTab === "settings" && (
+                <AccountSettings
+                  formData={formData}
+                  handleChange={handleChange}
+                  updateEmail={updateEmail}
+                  updatePassword={updatePassword}
+                  deleteAccount={deleteAccount}
+                  logout={logout}
+                />
+              )}
             </div>
           </div>
         </div>

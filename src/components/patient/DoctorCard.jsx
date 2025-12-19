@@ -6,7 +6,7 @@ export default function DoctorCard({ doctor, onBook }) {
     specialization,
     experience,
     rating = "4.7",
-    location = "Remote/Clinic",
+    city = "Remote/Clinic",
   } = doctor;
 
   return (
@@ -41,7 +41,7 @@ export default function DoctorCard({ doctor, onBook }) {
           </span>
           <span className="flex items-center gap-1 font-medium col-span-2 md:col-span-1">
             <MapPin size={14} className="text-red-500" />
-            {location}
+            {city}
           </span>
         </div>
       </div>

@@ -22,7 +22,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DoctorProfile from "./pages/doctor/DoctorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
-import PatientSetPassword from "./pages/patient/PatientSetPassword";
+import SetPassword from "./pages/SetPassword";
 
 export default function App() {
   return (
@@ -53,12 +53,13 @@ export default function App() {
         <Route path="/patient/dashboard/history" element={<PatientHistory />} />
         <Route path="/patient/dashboard/profile" element={<PatientProfile />} />
         <Route path="/patient/pending" element={<Pending />} />
-        <Route path="/patient/set-password" element={<PatientSetPassword />} />
+        <Route path="/patient/set-password" element={<SetPassword />} />
 
         {/* ---------------- DOCTOR ---------------- */}
         <Route path="/doctor/auth" element={<DoctorAuth />} />
         <Route path="/doctor/pending" element={<Pending />} />
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+        <Route path="/doctor/set-password" element={<SetPassword />} />
 
         {/* ---------------- ADMIN ---------------- */}
         <Route path="/admin/login" element={<AdminLogin />} />
