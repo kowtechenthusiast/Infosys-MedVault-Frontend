@@ -6,58 +6,25 @@ import {
   Calendar,
   Heart,
   MapPin,
-  Lock,
   Edit,
+  FileText,
+  Upload,
+  Image as ImageIcon,
   Check,
-  X,
-  AlertCircle,
+  Eye,
+  Download,
 } from "lucide-react";
 
 export default function BasicDetails({
   formData,
   handleChange,
+  handleFileChange,
   isEditing,
   setIsEditing,
   handleSave,
-  mustSetPasswordFirst,
-  handleSetPassword,
 }) {
-  // Base button styles for re-use
   const buttonBase =
     "px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 justify-center";
-
-  // --- PASSWORD VALIDATION LOGIC ---
-  const currentPassword = formData.initialPassword || "";
-  const confirmPassword = formData.confirmPassword || "";
-
-  const passwordRequirements = [
-    {
-      id: 1,
-      label: "At least 8 characters",
-      valid: currentPassword.length >= 8,
-    },
-    {
-      id: 2,
-      label: "One uppercase letter",
-      valid: /[A-Z]/.test(currentPassword),
-    },
-    {
-      id: 3,
-      label: "One lowercase letter",
-      valid: /[a-z]/.test(currentPassword),
-    },
-    { id: 4, label: "One number", valid: /[0-9]/.test(currentPassword) },
-    {
-      id: 5,
-      label: "One special character",
-      valid: /[^A-Za-z0-9]/.test(currentPassword),
-    },
-  ];
-
-  const allRequirementsMet = passwordRequirements.every((req) => req.valid);
-  const passwordsMatch =
-    currentPassword === confirmPassword && currentPassword !== "";
-  const isFormValid = allRequirementsMet && passwordsMatch;
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
@@ -69,17 +36,11 @@ export default function BasicDetails({
 
         {!isEditing ? (
           <button
-            onClick={() => !mustSetPasswordFirst && setIsEditing(true)}
-            disabled={mustSetPasswordFirst}
-            className={`${buttonBase} text-sm 
-              ${
-                mustSetPasswordFirst
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : "bg-blue-50 text-blue-600 hover:bg-blue-100 shadow-sm"
-              }`}
+            onClick={() => setIsEditing(true)}
+            className={`${buttonBase} text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 shadow-sm`}
           >
             <Edit size={16} />
-            {mustSetPasswordFirst ? "Locked" : "Edit Profile"}
+            Edit Profile
           </button>
         ) : (
           <span
@@ -91,110 +52,8 @@ export default function BasicDetails({
         )}
       </div>
 
-      {/* --- STEP 1: Enforce Password Setup (Highly Styled Warning) --- */}
-      {mustSetPasswordFirst && (
-        <div className="bg-linear-to-br from-red-50/70 to-red-100/70 backdrop-blur-md border border-red-200 p-8 rounded-3xl space-y-6 shadow-xl transition-all duration-500">
-          <h4 className="text-xl text-red-700 font-bold flex items-center gap-3">
-            <Lock size={20} className="text-red-500 animate-pulse" /> Security
-            Initialization Required
-          </h4>
-          <p className="text-slate-600 text-sm">
-            Your account is temporarily restricted. Please set a{" "}
-            <strong>strong password</strong> to unlock editing and access to
-            other sections.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ProfileInput
-              icon={Lock}
-              label="New Password"
-              type="password"
-              name="initialPassword"
-              value={formData.initialPassword || ""}
-              onChange={handleChange}
-              placeholder="Enter new password"
-            />
-            <ProfileInput
-              icon={Lock}
-              label="Confirm Password"
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword || ""}
-              onChange={handleChange}
-              placeholder="Confirm new password"
-            />
-          </div>
-
-          {/* --- PASSWORD STRENGTH VALIDATOR UI --- */}
-          <div className="bg-white/60 rounded-xl p-4 border border-red-100/50">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-              Password Requirements
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {passwordRequirements.map((req) => (
-                <div
-                  key={req.id}
-                  className={`flex items-center gap-2 text-sm transition-colors duration-300 ${
-                    req.valid ? "text-green-700 font-medium" : "text-slate-500"
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                      req.valid
-                        ? "bg-green-100 border-green-500 text-green-600"
-                        : "bg-slate-100 border-slate-300 text-slate-300"
-                    }`}
-                  >
-                    {req.valid ? (
-                      <Check size={12} strokeWidth={3} />
-                    ) : (
-                      <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
-                    )}
-                  </div>
-                  {req.label}
-                </div>
-              ))}
-            </div>
-
-            {/* Match Confirmation */}
-            <div className="mt-4 pt-3 border-t border-slate-200/60">
-              <div
-                className={`flex items-center gap-2 text-sm font-medium transition-all ${
-                  passwordsMatch ? "text-green-600" : "text-slate-400"
-                }`}
-              >
-                {passwordsMatch ? (
-                  <Check size={16} className="text-green-500" />
-                ) : (
-                  <AlertCircle size={16} />
-                )}
-                {passwordsMatch ? "Passwords match" : "Passwords must match"}
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSetPassword}
-            disabled={!isFormValid}
-            className={`${buttonBase} mt-4 text-white w-full md:w-auto 
-                ${
-                  isFormValid
-                    ? "bg-linear-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 shadow-lg shadow-red-500/30 cursor-pointer"
-                    : "bg-slate-300 cursor-not-allowed opacity-70"
-                }`}
-          >
-            <Lock size={18} />
-            Secure & Save Password
-          </button>
-        </div>
-      )}
-
-      {/* --- Profile Data Inputs --- */}
-      <div
-        className={`space-y-8 transition-opacity duration-300 ${
-          mustSetPasswordFirst ? "opacity-30 pointer-events-none" : ""
-        }`}
-      >
+      <div className="space-y-8">
+        {/* --- Profile Data Inputs --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ProfileInput
             icon={User}
@@ -228,7 +87,6 @@ export default function BasicDetails({
             value={formData.dateOfBirth}
             onChange={handleChange}
           />
-
           <ProfileInput
             icon={Heart}
             label="Blood Group"
@@ -238,7 +96,6 @@ export default function BasicDetails({
             onChange={handleChange}
             options={["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]}
           />
-
           <ProfileInput
             label="Gender"
             name="gender"
@@ -286,15 +143,95 @@ export default function BasicDetails({
             />
           </div>
         </div>
+        {/* --- Compact ID Proof Section (Bottom) --- */}
+        <div className="pt-6 border-t border-slate-200">
+          <h4 className="text-sm font-bold text-slate-600 mb-3 flex items-center gap-2 uppercase tracking-wide">
+            <FileText size={16} className="text-blue-500" />
+            ID Proof
+          </h4>
+
+          <div className="flex flex-col md:flex-row md:items-center gap-4 bg-slate-50 px-4 py-3 rounded-xl border border-slate-200">
+            {/* Status */}
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+              {formData.idProofPath ? (
+                <>
+                  <Check size={16} className="text-emerald-500" />
+                  Document uploaded
+                </>
+              ) : (
+                <>
+                  <ImageIcon size={16} className="text-slate-400" />
+                  No document uploaded
+                </>
+              )}
+            </div>
+
+            {/* Actions */}
+            {formData.idProofPath && (
+              <div className="flex items-center gap-2">
+                {/* View */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const baseUrl = "http://localhost:8080";
+                    const path = formData.idProofPath.startsWith("/")
+                      ? formData.idProofPath
+                      : `/${formData.idProofPath}`;
+                    window.open(`${baseUrl}${path}`, "_blank");
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 hover:bg-slate-100 flex items-center gap-1"
+                >
+                  <Eye size={14} /> View
+                </button>
+
+                {/* Download */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const baseUrl = "http://localhost:8080";
+                    const path = formData.idProofPath.startsWith("/")
+                      ? formData.idProofPath
+                      : `/${formData.idProofPath}`;
+                    const response = await fetch(`${baseUrl}${path}`);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = path.split("/").pop() || "id-proof";
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-1"
+                >
+                  <Download size={14} /> Download
+                </button>
+              </div>
+            )}
+
+            {/* Upload (Edit mode only) */}
+            {isEditing && (
+              <div className="md:ml-auto relative">
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+                <button className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2">
+                  <Upload size={14} />
+                  {formData.idProof ? "Change File" : "Upload File"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* --- Save Button --- */}
         {isEditing && (
           <div className="pt-8 flex justify-end">
             <button
               onClick={handleSave}
-              className={`${buttonBase} text-white 
-                bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 
-                shadow-xl shadow-blue-600/30`}
+              className={`${buttonBase} text-white bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-600/30`}
             >
               Save Profile Changes
             </button>

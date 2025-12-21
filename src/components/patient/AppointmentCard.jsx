@@ -1,74 +1,85 @@
-import {
-  Stethoscope,
-  Calendar,
-  Clock,
-  MapPin,
-  AlertTriangle,
-  ChevronRight,
-} from "lucide-react";
+import { useState } from "react";
+import { Stethoscope, CalendarDays, ChevronRight } from "lucide-react";
+import AppointmentDetailModal from "./AppointmentDetailModal";
+import RescheduleModal from "./RescheduleModal"; // Import the new modal
 
 export default function AppointmentCard({ data }) {
-  // Use a status color for visual prominence
-  const statusColor = "text-green-600"; // Assuming appointments are confirmed
+  const [openDetail, setOpenDetail] = useState(false);
+  const [openReschedule, setOpenReschedule] = useState(false);
+
+  const statusStyles = {
+    REQUESTED: "bg-amber-50 text-amber-600 border-amber-100",
+    CONFIRMED: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    CANCELLED: "bg-red-50 text-red-600 border-red-100",
+  };
 
   return (
-    // THEMED WRAPPER: Elevated card styling with hover glow and lift
-    <div
-      className="p-6 bg-white rounded-2xl border border-slate-100 
-                 transition-all duration-300 hover:-translate-y-0.5 group
-                 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] 
-                 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] 
-                 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0"
-    >
-      {/* 1. Doctor and Specialty Details */}
-      <div className="flex-1 min-w-0">
-        <h3 className="text-2xl font-extrabold text-slate-800 drop-shadow-sm group-hover:text-blue-600 transition-colors truncate">
-          {data.doctor}
-        </h3>
+    <>
+      <div className="w-full bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-4 group">
+        {/* Date Badge */}
+        <div className="flex flex-col items-center justify-center bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 min-w-[100px]">
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-tighter">
+            {new Date(data.appointmentDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+          <span className="text-sm font-black text-slate-700">
+            {data.appointmentTime.slice(0, 5)}
+          </span>
+        </div>
 
-        <p
-          className={`text-lg font-medium ${statusColor} flex items-center gap-2 mt-1`}
-        >
-          <Stethoscope size={18} className="text-cyan-500" />
-          Specialist: {data.specialization}
-        </p>
+        {/* Doctor Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-slate-800 truncate">
+              Dr. {data.doctorName}
+            </h3>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${
+                statusStyles[data.status] || statusStyles.REQUESTED
+              }`}
+            >
+              {data.status}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+            <Stethoscope size={12} className="text-blue-400" />{" "}
+            {data.specialization}
+          </p>
+        </div>
 
-        <p className="text-sm text-slate-500 flex items-center gap-2 mt-2">
-          <MapPin size={14} className="text-red-500" />
-          Location: {data.location}
-        </p>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setOpenReschedule(true)}
+            className="p-2.5 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+            title="Reschedule Appointment"
+          >
+            <CalendarDays size={18} />
+          </button>
+
+          <button
+            onClick={() => setOpenDetail(true)}
+            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* 2. Date and Time (Gradient Accent) */}
-      <div className="text-center md:text-right shrink-0 md:ml-6">
-        {/* Date and Time highlighted with theme gradient */}
-        <p className="text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-cyan-500">
-          {data.date}
-        </p>
-        <p className="text-xl font-bold text-slate-700 flex items-center gap-1 justify-center md:justify-end">
-          <Clock size={18} className="text-blue-500" />
-          {data.time}
-        </p>
-      </div>
+      <AppointmentDetailModal
+        isOpen={openDetail}
+        onClose={() => setOpenDetail(false)}
+        data={data}
+      />
 
-      {/* 3. Actions */}
-      <div className="flex flex-col gap-2 w-full md:w-auto md:ml-8 shrink-0">
-        {/* View Details Button (Primary Action) */}
-        {/* <button
-          className="px-4 py-2.5 bg-linear-to-r from-blue-600 to-cyan-500 text-white font-bold rounded-xl 
-                       shadow-[0_4px_15px_rgba(6,182,212,0.4)] hover:shadow-[0_8px_25px_rgba(6,182,212,0.6)] transition-all duration-300 flex items-center justify-center gap-2"
-        >
-          View Details <ChevronRight size={16} />
-        </button> */}
-
-        {/* Cancel Button (Secondary/Warning Action) */}
-        <button
-          className="px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 font-medium rounded-xl 
-                       hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-        >
-          <AlertTriangle size={16} /> Cancel
-        </button>
-      </div>
-    </div>
+      {openReschedule && (
+        <RescheduleModal
+          appointment={data}
+          onClose={() => setOpenReschedule(false)}
+        />
+      )}
+    </>
   );
 }

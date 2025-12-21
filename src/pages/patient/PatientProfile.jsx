@@ -25,6 +25,8 @@ export default function PatientProfile() {
     state: "",
     country: "",
     pincode: "",
+    idProofPath: "", // To store the URL from backend
+    idProof: null, // To store the selected file
 
     sleepHours: "",
     diet: "",
@@ -84,6 +86,9 @@ export default function PatientProfile() {
   // SAVE PROFILE
   // -------------------------------------------
   const saveProfile = async () => {
+    const data = new FormData();
+    data.append("userId", patientId);
+
     const allowedFields = [
       "dateOfBirth",
       "gender",
@@ -105,27 +110,30 @@ export default function PatientProfile() {
       "heartRate",
     ];
 
-    const requestObject = { userId: patientId };
-
     allowedFields.forEach((key) => {
-      if (formData[key] !== "" && formData[key] !== undefined) {
-        requestObject[key] = formData[key];
-      }
+      if (formData[key]) data.append(key, formData[key]);
     });
+
+    // Append the file if a new one was selected
+    if (formData.idProof) {
+      data.append("idProof", formData.idProof);
+    }
 
     try {
       const res = await fetch(
         "http://localhost:8080/api/profile/patient/complete-profile",
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestObject),
+          // Note: Content-Type header is omitted so the browser sets it to
+          // multipart/form-data with the correct boundary automatically
+          body: data,
         }
       );
 
       if (res.ok) {
         setIsEditing(false);
         alert("Profile updated successfully!");
+        // Optional: Re-fetch to get the new idProofPath
       } else {
         alert("Update failed");
       }
@@ -133,6 +141,10 @@ export default function PatientProfile() {
       console.error(err);
       alert("Update failed");
     }
+  };
+
+  const handleFileChange = (e) => {
+    setFormData((p) => ({ ...p, idProof: e.target.files[0] }));
   };
 
   const updateEmail = () => alert("Email updated!");
@@ -169,6 +181,7 @@ export default function PatientProfile() {
                   isEditing={isEditing}
                   setIsEditing={setIsEditing}
                   handleSave={saveProfile}
+                  handleFileChange={handleFileChange}
                 />
               )}
 

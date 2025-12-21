@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import DoctorProfile from "./pages/doctor/DoctorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
 import SetPassword from "./pages/SetPassword";
+import AuthRoleSelect from "./components/AuthRoleSelect";
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<AuthRoleSelect />} />
 
         {/* ---------------- PATIENT ---------------- */}
         <Route path="/patient/auth" element={<PatientAuth />} />

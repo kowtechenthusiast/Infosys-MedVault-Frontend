@@ -62,6 +62,8 @@ export default function BookAppointment() {
   const [doctors, setDoctors] = useState([]);
   const itemsPerPage = 3;
 
+  console.log(selectedDoctor);
+
   // Mock data for the doctor list (Extended for pagination demonstration)
   useEffect(() => {
     const fetchDoctors = async () => {
