@@ -2,20 +2,21 @@ import { useState } from "react";
 import PatientSidebar from "../../components/patient/PatientSidebar";
 import PatientOverview from "./PatientOverview";
 import BookAppointment from "./BookAppointment";
-import PatientUpcoming from "./PatientUpcoming";
+import PatientAppointment from "./PatientAppointment";
 import PatientHistory from "./PatientHistory";
 import PatientProfile from "./PatientProfile";
 import SimpleFooter from "../../components/SimpleFooter"; // Import the Footer
-
-// Sample Data (Necessary for the Sidebar/Overview, mirroring DoctorDashboard structure)
-const USER_INFO = {
-  name: "Sarah Chen",
-  email: "sarah@example.com",
-  id: "PAT-1004",
-};
+import MedicalRecordAccessRequests from "./MedicalRecordAccessRequests";
+import { useAuth } from "../../context/useAuthContext";
 
 export default function PatientDashboard() {
   const [current, setCurrent] = useState("overview");
+  const { name } = useAuth();
+  const USER_INFO = {
+    name: name || "Sarah Chen",
+    email: "sarah@example.com",
+    id: "PAT-1004",
+  };
 
   return (
     // Background: Very light gray (bg-slate-50) to allow the "glowing" content cards to pop.
@@ -33,9 +34,9 @@ export default function PatientDashboard() {
         <div className="min-h-[calc(100vh-140px)]">
           {current === "overview" && <PatientOverview userInfo={USER_INFO} />}
           {current === "book" && <BookAppointment />}
-          {current === "upcoming" && <PatientUpcoming />}
-          {current === "history" && <PatientHistory />}
-          {current === "profile" && <PatientProfile userInfo={USER_INFO} />}
+          {current === "appointment" && <PatientAppointment />}
+          {/* {current === "history" && <PatientHistory />} */}
+          {current === "access-requests" && <MedicalRecordAccessRequests />}
         </div>
 
         {/* === FOOTER === */}

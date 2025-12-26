@@ -1,20 +1,23 @@
 import { useState } from "react";
 import DoctorSidebar from "../../components/doctor/DoctorSidebar";
 import DoctorOverview from "./DoctorOverview";
-import UpcomingAppointments from "./UpcomingAppointments";
+import MyAppointments from "./MyAppointments";
 import AppointmentHistory from "./AppointmentHistory";
 import SimpleFooter from "../../components/SimpleFooter";
 import SlotManager from "./SlotManager";
+import { useAuth } from "../../context/useAuthContext";
 
 // Sample Data
-const USER_INFO = {
-  name: "Dr. Eleanor Vance",
-  specialty: "Cardiology",
-  id: "DOC-409",
-};
 
 export default function DoctorDashboard() {
+  const { name } = useAuth();
   const [current, setCurrent] = useState("overview");
+
+  const USER_INFO = {
+    name: name || "Dr. Eleanor Vance",
+    specialty: "Cardiology",
+    id: `DOC-${localStorage.getItem("userId") || "1001"}`,
+  };
 
   // Note: The ml-72 class applied to the main content div below ensures
   // that the footer (which is inside this div) also aligns correctly
@@ -33,8 +36,8 @@ export default function DoctorDashboard() {
         {/* === MAIN CONTENT VIEW === */}
         <div className="min-h-[calc(100vh-140px)]">
           {current === "overview" && <DoctorOverview userInfo={USER_INFO} />}
-          {current === "upcoming" && <UpcomingAppointments />}
-          {current === "history" && <AppointmentHistory />}
+          {current === "upcoming" && <MyAppointments />}
+          {/* {current === "history" && <AppointmentHistory />} */}
           {current === "slots" && <SlotManager />}
         </div>
 

@@ -85,7 +85,7 @@ const PatientGreeting = ({ name }) => (
 
 // --- Main Patient Overview Component ---
 
-export default function PatientOverview() {
+export default function PatientOverview({ userInfo }) {
   const patientStats = [
     {
       title: "Total Appointments",
@@ -128,7 +128,7 @@ export default function PatientOverview() {
   return (
     <div className="space-y-8">
       {/* 1. Themed Patient Greeting */}
-      <PatientGreeting name="Jane Doe" />
+      <PatientGreeting name={userInfo.name} />
 
       {/* 2. Glowing Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -150,8 +150,8 @@ export default function PatientOverview() {
           <HeartPulse size={28} /> Daily Health Tip
         </h2>
         <p className="mt-2 text-blue-100 text-lg">
-          Drink at least **2L of water** every day to stay hydrated and
-          energetic! Don't forget your 10,000 steps goal.
+          Drink at least <strong>2L of water</strong> every day to stay hydrated
+          and energetic! Don't forget your 10,000 steps goal.
         </p>
       </div>
 

@@ -7,151 +7,177 @@ import {
   X,
   Calendar,
   User,
-  Info,
   Clock,
   MapPin,
-  AlertTriangle,
+  AlertCircle,
+  Stethoscope,
+  ChevronRight,
 } from "lucide-react";
 
 export default function AppointmentDetailModal({ isOpen, onClose, data }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-        {/* Top Section: Profile Header */}
-        <div className="relative bg-linear-to-br from-blue-600 to-indigo-700 p-8 text-white">
-          <button
-            onClick={onClose}
-            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-4">
+      <div className="bg-white rounded-[2rem] w-full max-w-4xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="flex flex-col md:flex-row min-h-[500px]">
+          {/* LEFT PANEL: Provider Identity */}
+          <div className="md:w-2/5 bg-slate-50 border-r border-slate-100 p-10 flex flex-col justify-between">
+            <div className="space-y-6">
+              <div className="h-24 w-24 bg-white rounded-3xl shadow-sm border border-slate-200 flex items-center justify-center">
+                <User size={44} className="text-blue-600" />
+              </div>
 
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="h-24 w-24 bg-white/20 rounded-3xl backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
-              <User size={48} className="text-white" />
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-3xl font-black text-slate-800 tracking-tight leading-none">
+                    Dr. {data.doctorName}
+                  </h2>
+                </div>
+                <p className="text-blue-600 font-bold flex items-center gap-2 text-sm uppercase tracking-wide">
+                  <Stethoscope size={16} /> {data.specialization}
+                </p>
+                <p className="text-slate-400 text-sm mt-1 font-medium">
+                  {data.qualification}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <BadgeItem
+                  icon={
+                    <Star size={14} className="fill-amber-400 text-amber-400" />
+                  }
+                  text={`${data.averageRating || "New"} Rating`}
+                />
+                <BadgeItem
+                  icon={<Briefcase size={14} className="text-slate-400" />}
+                  text={`${data.experience} Years of Experience`}
+                />
+                <BadgeItem
+                  icon={<ShieldCheck size={14} className="text-emerald-500" />}
+                  text="Verified Medical Provider"
+                />
+              </div>
             </div>
 
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-black tracking-tight">
-                  Dr. {data.doctorName}
-                </h2>
-                <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full backdrop-blur-md border border-white/20">
-                  <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-bold">
-                    {data.averageRating || "New"}
-                  </span>
-                </div>
-              </div>
-              <p className="text-blue-100 font-medium text-lg mt-1">
-                {data.specialization} • {data.qualification}
+            <div className="pt-8 border-t border-slate-200">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
+                Support
               </p>
-
-              <div className="flex flex-wrap gap-4 mt-4">
-                <div className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500/20 px-3 py-1.5 rounded-lg border border-emerald-400/30">
-                  <ShieldCheck size={14} /> Verified Provider
+              <div className="flex items-center gap-4 text-slate-600">
+                <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-200">
+                  <Phone size={18} className="text-blue-500" />
                 </div>
-                <div className="flex items-center gap-1.5 text-xs font-bold bg-blue-400/20 px-3 py-1.5 rounded-lg border border-blue-300/30">
-                  <Briefcase size={14} /> {data.experience} Years Exp.
+                <div>
+                  <p className="text-xs font-bold">{data.phone}</p>
+                  <p className="text-[10px] text-slate-400">Clinic Helpline</p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Content Section */}
-        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Appointment Context */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">
-              Visit Logistics
-            </h4>
-            <div className="space-y-4">
-              <Info
-                icon={<Calendar size={18} className="text-blue-500" />}
-                label="Date"
+          {/* RIGHT PANEL: Appointment Details */}
+          <div className="flex-1 p-10 flex flex-col">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black tracking-widest uppercase border border-blue-100">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
+                  {data.status}
+                </span>
+                <h3 className="text-xl font-bold text-slate-800 mt-2">
+                  Appointment Summary
+                </h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8 flex-1">
+              <DetailRow
+                icon={<Calendar className="text-blue-500" size={20} />}
+                label="Scheduled Date"
                 value={data.appointmentDate}
               />
-              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                <div className="flex items-center gap-3">
-                  <Clock size={18} className="text-blue-500" />
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">
-                      Time Slot
-                    </p>
-                    <p className="font-bold text-slate-700">
-                      {data.appointmentTime}
-                    </p>
-                  </div>
-                </div>
-                <div className="px-3 py-1 bg-white rounded-lg shadow-sm border border-slate-200 text-xs font-black text-blue-600">
-                  {data.status}
-                </div>
-              </div>
-              <Info
-                icon={<MapPin size={18} className="text-red-500" />}
-                label="Facility"
+              <DetailRow
+                icon={<Clock className="text-blue-500" size={20} />}
+                label="Arrival Time"
+                value={data.appointmentTime}
+              />
+              <DetailRow
+                icon={<MapPin className="text-red-500" size={20} />}
+                label="Clinical Facility"
                 value={data.clinicHospitalName}
+                subtext={data.city}
               />
-              <p className="text-[10px] text-slate-400 ml-8 -mt-3 italic">
-                {data.city}
-              </p>
-            </div>
-          </div>
+              <DetailRow
+                icon={<Banknote className="text-emerald-500" size={20} />}
+                label="Consultation Fee"
+                value={`₹${data.consultationFee}`}
+              />
 
-          {/* Professional Details */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">
-              Pricing & Contact
-            </h4>
-            <div className="space-y-4">
-              <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl">
-                    <Banknote size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase">
-                      Consultation Fee
-                    </p>
-                    <p className="text-xl font-black text-slate-800">
-                      ₹{data.consultationFee}
-                    </p>
-                  </div>
-                </div>
+              <div className="col-span-full bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                  Chief Complaint
+                </p>
+                <p className="text-slate-700 font-medium italic leading-relaxed">
+                  "
+                  {data.reason ||
+                    "Patient requested a general health checkup and consultation."}
+                  "
+                </p>
               </div>
+            </div>
 
-              <Info
-                icon={<Phone size={18} className="text-indigo-500" />}
-                label="Support Line"
-                value={data.phone}
-              />
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">
-                  Reason for visit
-                </p>
-                <p className="text-sm font-semibold text-slate-700 italic">
-                  "{data.reason || "General Consultation"}"
-                </p>
+            {/* Footer Actions */}
+            <div className="mt-12 flex items-center justify-between pt-6 border-t border-slate-100">
+              <button className="group flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">
+                <AlertCircle size={16} />
+                Cancel Session
+              </button>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-2"
+                >
+                  Confirm Details <ChevronRight size={16} />
+                </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Actions Footer */}
-        <div className="p-6 border-t bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <button className="text-red-600 text-sm font-bold flex items-center gap-2 hover:underline">
-            <AlertTriangle size={16} /> Cancel Appointment
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full sm:w-auto px-10 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
-          >
-            Dismiss
-          </button>
-        </div>
+// Sub-components for cleaner code
+function BadgeItem({ icon, text }) {
+  return (
+    <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white/50 px-3 py-2 rounded-xl border border-slate-200/60 shadow-sm">
+      {icon} {text}
+    </div>
+  );
+}
+
+function DetailRow({ icon, label, value, subtext }) {
+  return (
+    <div className="flex gap-4">
+      <div className="mt-1">{icon}</div>
+      <div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+          {label}
+        </p>
+        <p className="text-base font-bold text-slate-800 leading-none">
+          {value}
+        </p>
+        {subtext && (
+          <p className="text-xs text-slate-400 mt-1 font-medium">{subtext}</p>
+        )}
       </div>
     </div>
   );

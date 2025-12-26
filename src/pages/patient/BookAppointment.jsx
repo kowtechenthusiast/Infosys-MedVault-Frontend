@@ -1,70 +1,27 @@
 import { useEffect, useState } from "react";
 import DoctorCard from "../../components/patient/DoctorCard";
 import BookingModal from "../../components/patient/BookingModal";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react"; // Import pagination icons
-
-// Helper component for styled Pagination controls (No changes needed here)
-const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
-  const getPageNumbers = () => {
-    const pages = [];
-    // Ensure we render pages only up to totalPages
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
-
-  return (
-    <div className="flex justify-center items-center gap-2 mt-8">
-      {/* Previous Button */}
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="p-2 rounded-full text-slate-500 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 transition-colors"
-      >
-        <ChevronLeft size={20} />
-      </button>
-
-      {/* Page Numbers */}
-      <div className="flex gap-1">
-        {getPageNumbers().map((page) => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={`w-10 h-10 rounded-xl font-semibold transition-all duration-300
-              ${
-                currentPage === page
-                  ? "bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-[0_4px_15px_rgba(6,182,212,0.4)]"
-                  : "text-slate-600 hover:bg-blue-50 hover:text-blue-600"
-              }`}
-          >
-            {page}
-          </button>
-        ))}
-      </div>
-
-      {/* Next Button */}
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="p-2 rounded-full text-slate-500 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 transition-colors"
-      >
-        <ChevronRight size={20} />
-      </button>
-    </div>
-  );
-};
+import DoctorDetailsModal from "../../components/patient/DoctorDetailsModal";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal,
+  MapPin,
+  Sparkles,
+} from "lucide-react";
 
 export default function BookAppointment() {
-  const [search, setSearch] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [doctors, setDoctors] = useState([]);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("relevance");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [viewDoctor, setViewDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const itemsPerPage = 3;
 
-  console.log(selectedDoctor);
-
-  // Mock data for the doctor list (Extended for pagination demonstration)
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -76,107 +33,147 @@ export default function BookAppointment() {
             },
           }
         );
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch doctor requests");
-        }
-
         const data = await res.json();
-        console.log("Doctor Verification Data:", data);
-
         setDoctors(data.doctors || []);
       } catch (err) {
         console.error(err.message);
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchDoctors();
   }, []);
 
-  // 1. Filtering Logic
-  const filtered = doctors.filter(
-    (d) =>
-      (d.name && d.name.toLowerCase().includes(search.toLowerCase())) ||
-      (d.specialization &&
-        d.specialization.toLowerCase().includes(search.toLowerCase()))
+  const filteredDoctors = doctors.filter((d) => {
+    const term = search.toLowerCase();
+    return (
+      d.name?.toLowerCase().includes(term) ||
+      d.specialization?.toLowerCase().includes(term) ||
+      d.city?.toLowerCase().includes(term)
+    );
+  });
+
+  const sortedDoctors = [...filteredDoctors].sort((a, b) => {
+    if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
+    if (sortBy === "fee")
+      return (a.consultationFee || 0) - (b.consultationFee || 0);
+    if (sortBy === "experience")
+      return (b.experience || 0) - (a.experience || 0);
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedDoctors.length / itemsPerPage);
+  const doctorsToShow = sortedDoctors.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  // 2. Pagination Logic
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const doctorsToShow = filtered.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const handleSearchChange = (e) => {
-    const newSearchTerm = e.target.value;
-    setSearch(newSearchTerm);
-    // FIX: Reset the current page to 1 whenever the search term changes.
-    setCurrentPage(1);
-  };
-
   return (
-    <div className="space-y-8">
-      {/* 1. Themed Header */}
-      <h2 className="text-3xl font-extrabold text-slate-800 drop-shadow-sm border-b border-blue-100 pb-2">
-        Find & Book{" "}
-        <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-cyan-500">
-          Your Specialist
-        </span>
-      </h2>
+    <div className="max-w-6xl mx-auto space-y-10 pb-20">
+      {/* SECTION: HERO & SEARCH */}
+      <section className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-blue-600 font-bold text-sm uppercase tracking-wider">
+            <Sparkles size={16} />
+            <span>Find Specialist</span>
+          </div>
+          <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+            Book your next{" "}
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-500">
+              Medical Session
+            </span>
+          </h2>
+          <p className="text-slate-500 max-w-2xl font-medium">
+            Browse through our verified network of top-tier specialists. Filter
+            by rating, experience, or consultation fees.
+          </p>
+        </div>
 
-      {/* 2. Themed Search Bar */}
-      <div className="relative w-full md:w-2/3 max-w-xl">
-        <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-          size={20}
-        />
-        <input
-          placeholder="Search by Doctor name or Specialization..."
-          className="w-full pl-12 pr-4 py-3 bg-white border border-blue-100 rounded-xl text-slate-700 
-                     shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          onChange={handleSearchChange} // Use the new handler here
-          value={search} // Ensure input value is controlled
-        />
-      </div>
+        {/* SEARCH & FILTER BAR */}
+        <div className="flex flex-col lg:flex-row gap-4 p-2 bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 border border-slate-100 transition-all focus-within:border-blue-200">
+          <div className="relative flex-[2]">
+            <Search
+              className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
+              size={20}
+            />
+            <input
+              placeholder="Search name, specialty, or location..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-14 pr-4 py-4 bg-transparent text-slate-800 font-medium placeholder:text-slate-400 focus:outline-none"
+            />
+          </div>
 
-      {/* 3. Doctor Cards List */}
-      <div className="mt-6 space-y-5 min-h-[300px]">
-        {doctorsToShow.length > 0 ? (
+          <div className="flex items-center gap-2 px-4 border-l border-slate-100">
+            <SlidersHorizontal size={18} className="text-slate-400" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-transparent py-4 text-slate-700 font-bold focus:outline-none cursor-pointer"
+            >
+              <option value="relevance">Relevance</option>
+              <option value="rating">Top Rated</option>
+              <option value="fee">Lowest Fee</option>
+              <option value="experience">Experience</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION: DOCTOR LIST */}
+      <div className="grid gap-6">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+            <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-slate-500 font-bold">
+              Fetching verified specialists...
+            </p>
+          </div>
+        ) : doctorsToShow.length > 0 ? (
           doctorsToShow.map((doctor) => (
             <DoctorCard
-              key={doctor.id}
+              key={doctor.userId}
               doctor={doctor}
               onBook={() => setSelectedDoctor(doctor)}
+              onView={() => setViewDoctor(doctor)}
             />
           ))
         ) : (
-          <p className="text-slate-500 text-center py-10 border border-dashed rounded-xl">
-            No doctors found matching "{search}". Try a different name or
-            specialty.
-          </p>
+          <div className="flex flex-col items-center justify-center py-24 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200 text-center">
+            <MapPin size={48} className="text-slate-300 mb-4" />
+            <h3 className="text-xl font-bold text-slate-800">
+              No results found
+            </h3>
+            <p className="text-slate-500">
+              Try adjusting your search terms or filters.
+            </p>
+          </div>
         )}
       </div>
 
-      {/* 4. Themed Pagination Controls */}
-      {filtered.length > itemsPerPage && (
+      {/* PAGINATION */}
+      {sortedDoctors.length > itemsPerPage && (
         <PaginationControls
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={handlePageChange}
+          onPageChange={setCurrentPage}
         />
       )}
 
-      {/* 5. Booking Modal (Themed) */}
+      {/* MODALS */}
       {selectedDoctor && (
         <BookingModal
           doctor={selectedDoctor}
           onClose={() => setSelectedDoctor(null)}
+        />
+      )}
+      {viewDoctor && (
+        <DoctorDetailsModal
+          doctor={viewDoctor}
+          onClose={() => setViewDoctor(null)}
         />
       )}
     </div>

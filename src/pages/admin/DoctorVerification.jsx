@@ -70,7 +70,7 @@ export default function DoctorVerification() {
       {/* Header */}
       <div className="pb-4 border-b border-slate-50">
         <h2 className="text-3xl font-bold text-slate-800 mb-4">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-cyan-500">
             Doctor Verification Requests
           </span>
         </h2>

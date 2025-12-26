@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Stethoscope, CalendarDays, ChevronRight } from "lucide-react";
+import { Stethoscope, CalendarDays, Eye } from "lucide-react";
 import AppointmentDetailModal from "./AppointmentDetailModal";
 import RescheduleModal from "./RescheduleModal"; // Import the new modal
 
@@ -61,9 +61,13 @@ export default function AppointmentCard({ data }) {
 
           <button
             onClick={() => setOpenDetail(true)}
-            className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+            className="group p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm flex items-center gap-2"
+            title="View Details"
           >
-            <ChevronRight size={18} />
+            <Eye
+              size={18}
+              className="transition-transform group-hover:scale-110"
+            />
           </button>
         </div>
       </div>

@@ -13,7 +13,7 @@ export default function DoctorSidebar({ current, setCurrent, userInfo }) {
   const items = [
     { id: "overview", label: "Dashboard Overview", icon: BarChart3 },
     { id: "upcoming", label: "Upcoming Sessions", icon: Calendar },
-    { id: "history", label: "Patient Records", icon: History },
+    // { id: "history", label: "Patient Records", icon: History },
     { id: "slots", label: "Manage Slots", icon: TrendingUp },
   ];
 
