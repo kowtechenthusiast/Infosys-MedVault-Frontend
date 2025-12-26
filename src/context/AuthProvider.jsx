@@ -3,6 +3,7 @@ import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   // Initialize state directly from localStorage (no effect needed)
+  const [name, setName] = useState("");
   const [role, setRole] = useState(() => {
     if (localStorage.getItem("adminToken")) return "admin";
     return localStorage.getItem("role") || null;
@@ -30,7 +31,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ role, user, login, logout, setRole }}>
+    <AuthContext.Provider
+      value={{ role, user, login, logout, setRole, name, setName }}
+    >
       {children}
     </AuthContext.Provider>
   );

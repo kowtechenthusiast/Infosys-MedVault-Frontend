@@ -42,7 +42,7 @@ const DetailModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-      <div className="bg-white rounded-[2rem] w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-white rounded-4xl w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Modal Header */}
         <div className="p-6 border-b flex justify-between items-center bg-white">
           <div className="flex items-center gap-4">
@@ -215,7 +215,7 @@ const InfoItem = ({ icon, label, value }) => (
 );
 
 // --- Main Card Component ---
-export default function VerificationCard({ data, role }) {
+export default function VerificationCard({ data }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [status, setStatus] = useState(data.status);
   const [actionLoading, setActionLoading] = useState(false);
@@ -275,7 +275,7 @@ export default function VerificationCard({ data, role }) {
           className={`flex items-center justify-between p-4 bg-white border ${statusColors.border} rounded-2xl shadow-sm hover:shadow-md transition-shadow`}
         >
           {/* Basic Info Group */}
-          <div className="flex items-center gap-4 flex-[2]">
+          <div className="flex items-center gap-4 flex-2">
             <div
               className={`h-10 w-10 rounded-full ${statusColors.bg} ${statusColors.text} flex items-center justify-center shrink-0`}
             >

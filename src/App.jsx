@@ -8,7 +8,6 @@ import PatientAuth from "./pages/patient/PatientAuth";
 import PatientDashboard from "./pages/patient/PatientDashboard";
 import PatientOverview from "./pages/patient/PatientOverview";
 import BookAppointment from "./pages/patient/BookAppointment";
-import PatientUpcoming from "./pages/patient/PatientUpcoming";
 import PatientHistory from "./pages/patient/PatientHistory";
 import PatientProfile from "./pages/patient/PatientProfile";
 
@@ -24,6 +23,7 @@ import DoctorProfile from "./pages/doctor/DoctorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
 import SetPassword from "./pages/SetPassword";
 import AuthRoleSelect from "./components/AuthRoleSelect";
+import MyAppointments from "./pages/doctor/MyAppointments";
 
 export default function App() {
   return (
@@ -50,7 +50,7 @@ export default function App() {
         <Route path="/patient/dashboard/book" element={<BookAppointment />} />
         <Route
           path="/patient/dashboard/upcoming"
-          element={<PatientUpcoming />}
+          element={<MyAppointments />}
         />
         <Route path="/patient/dashboard/history" element={<PatientHistory />} />
         <Route path="/patient/dashboard/profile" element={<PatientProfile />} />

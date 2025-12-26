@@ -69,7 +69,7 @@ export default function PatientVerification() {
       {/* Header */}
       <div className="pb-4 border-b border-slate-50">
         <h2 className="text-3xl font-bold text-slate-800 mb-4">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-cyan-500">
             Patient Identity Verification
           </span>
         </h2>

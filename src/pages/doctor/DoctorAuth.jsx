@@ -88,7 +88,7 @@ function FloatingInput({
 export default function DoctorAuth() {
   const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
-  const { setRole } = useAuth();
+  const { setRole, setName } = useAuth();
   const navigate = useNavigate();
 
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -193,6 +193,7 @@ export default function DoctorAuth() {
         localStorage.setItem("role", "doctor");
         localStorage.setItem("doctorToken", data.token);
         setRole("doctor");
+        setName(data.name);
 
         if (data.status === "PENDING") {
           navigate("/doctor/pending"); // Redirect to /pending if status is PENDING

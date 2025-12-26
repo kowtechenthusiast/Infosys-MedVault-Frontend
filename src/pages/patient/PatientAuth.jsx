@@ -126,7 +126,7 @@ function LoginHelper() {
 export default function PatientAuth() {
   const [current, setCurrent] = useState("login");
   const [message, setMessage] = useState("");
-  const { setRole } = useAuth("");
+  const { setRole, setName } = useAuth("");
   const [userId, setUserId] = useState(0);
   const navigate = useNavigate();
 
@@ -265,6 +265,7 @@ export default function PatientAuth() {
         localStorage.setItem("role", "patient");
         localStorage.setItem("patientToken", data.token);
         setRole("patient");
+        setName(data.name);
 
         if (data.status === "PENDING") {
           navigate("/patient/pending"); // Redirect to /pending if status is PENDING
