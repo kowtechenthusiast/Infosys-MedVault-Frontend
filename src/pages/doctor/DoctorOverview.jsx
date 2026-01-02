@@ -10,6 +10,7 @@ import {
   Activity,
   AlertTriangle,
 } from "lucide-react";
+import { useAuth } from "../../context/useAuthContext";
 
 // Reusable Glowing Card Component (UNMODIFIED)
 const GlowStatCard = ({ icon: Icon, title, value, subtext, colorParams }) => (
@@ -104,14 +105,23 @@ const FuturisticGreeting = ({ name }) => (
   </div>
 );
 
-export default function DoctorOverview({ userInfo }) {
+export default function DoctorOverview() {
   const [enabled, setEnabled] = useState(true);
+  const { user, logout } = useAuth();
+
+  const doctorInfo = {
+    name: user?.name || "Dr. Eleanor Vance",
+    specialty: user?.specialization || "Specialist",
+  };
 
   return (
     // Added overflow-x-hidden to the outer container to prevent horizontal scroll
     <div className="space-y-8 overflow-x-hidden">
       {/* 1. Greeting Section */}
-      <FuturisticGreeting name={userInfo.name} specialty={userInfo.specialty} />
+      <FuturisticGreeting
+        name={doctorInfo.name}
+        specialty={doctorInfo.specialty}
+      />
 
       {/* 2. Availability Switch (Cyber Style) */}
       <div className="flex items-center justify-between p-1 bg-white rounded-2xl border border-slate-100 shadow-sm max-w-sm">

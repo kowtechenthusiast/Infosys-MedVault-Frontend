@@ -1,8 +1,14 @@
 import React from "react";
-import { MessageSquare, Activity } from "lucide-react"; // Optional icons for flair
+import { MessageSquare, CheckCircle2, Clock } from "lucide-react";
 
-export default function PatientDetailsDrawer({ patient, onClose, reason }) {
+export default function PatientDetailsDrawer({
+  patient,
+  onClose,
+  reason,
+  status,
+}) {
   if (!patient) return null;
+  console.log("Patient Details:", patient);
 
   const formattedId = patient?.id
     ? `#${patient.id.toString().padStart(5, "0")}`
@@ -13,29 +19,52 @@ export default function PatientDetailsDrawer({ patient, onClose, reason }) {
       ? `${patient.bpSys}/${patient.bpDia}`
       : null;
 
+  // Status Styling Logic
+  const isConfirmed = status === "CONFIRMED";
+  const statusConfig = isConfirmed
+    ? {
+        label: "Confirmed",
+        color: "bg-emerald-400/20 text-emerald-200 border-emerald-400/30",
+        icon: <CheckCircle2 className="w-3 h-3" />,
+      }
+    : {
+        label: "Requested",
+        color: "bg-amber-400/20 text-amber-200 border-amber-400/30",
+        icon: <Clock className="w-3 h-3" />,
+      };
+
   return (
     <div className="fixed inset-0 z-100 flex justify-end p-4 bg-slate-900/20 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="w-full sm:w-[450px] bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden animate-in slide-in-from-right-full duration-500">
         {/* Header Decor */}
-        <div className="h-32 bg-linear-to-br from-indigo-600 via-violet-600 to-fuchsia-500 p-8 relative">
+        <div className="h-40 bg-linear-to-br from-indigo-600 via-violet-600 to-fuchsia-500 p-8 relative">
           <button
             onClick={onClose}
             className="absolute cursor-pointer top-6 right-6 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center text-white transition-all backdrop-blur-md"
           >
             ✕
           </button>
-          <div className="mt-4">
-            <h2 className="text-2xl font-black text-white leading-none">
+
+          <div className="mt-2">
+            {/* Status Badge */}
+            <div
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-3 ${statusConfig.color}`}
+            >
+              {statusConfig.icon}
+              {statusConfig.label}
+            </div>
+
+            <h2 className="text-3xl font-black text-white leading-tight">
               {patient?.user?.name}
             </h2>
-            <p className="text-indigo-100 text-[10px] mt-2 opacity-80 uppercase tracking-[0.2em] font-bold">
+            <p className="text-indigo-100 text-[10px] opacity-80 uppercase tracking-[0.2em] font-bold">
               Medical Profile Terminal
             </p>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
-          {/* NEW SECTION: Reason for Visit */}
+          {/* Reason Section */}
           <section className="relative">
             <div className="flex items-center gap-4 mb-4">
               <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
@@ -44,9 +73,7 @@ export default function PatientDetailsDrawer({ patient, onClose, reason }) {
               <div className="h-px flex-1 bg-slate-100"></div>
             </div>
             <div className="bg-slate-900 rounded-4xl p-6 shadow-xl shadow-indigo-100 relative overflow-hidden group">
-              {/* Decorative Icon */}
               <MessageSquare className="absolute -right-2 -bottom-2 text-white/5 w-16 h-16 transform -rotate-12" />
-
               <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">
                 Chief Complaint / Reason
               </p>
@@ -92,8 +119,8 @@ export default function PatientDetailsDrawer({ patient, onClose, reason }) {
             </div>
           </div>
 
-          {/* Detailed Info Section */}
-          <section className="space-y-6">
+          {/* Identification Section */}
+          <section className="space-y-6 pb-4">
             <div className="flex items-center gap-4">
               <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
                 Core Identification
@@ -104,26 +131,14 @@ export default function PatientDetailsDrawer({ patient, onClose, reason }) {
             <div className="grid grid-cols-1 gap-5">
               <InfoItem label="Registry ID" value={formattedId} />
               <InfoItem label="Electronic Mail" value={patient?.user?.email} />
-              <InfoItem label="Primary Contact" value={patient?.phone} />
               <div className="grid grid-cols-2 gap-4">
+                <InfoItem label="Primary Contact" value={patient?.phone} />
                 <InfoItem label="Blood Group" value={patient?.bloodGroup} />
-                <InfoItem label="Gender" value={patient?.gender} />
               </div>
               <InfoItem
                 label="Assigned Sector (Location)"
                 value={`${patient?.city}, ${patient?.state}`}
               />
-
-              {patient?.address && (
-                <div className="pt-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                    Biological Residence
-                  </span>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                    {patient.address}
-                  </p>
-                </div>
-              )}
             </div>
           </section>
         </div>
@@ -132,9 +147,13 @@ export default function PatientDetailsDrawer({ patient, onClose, reason }) {
         <div className="p-8 border-t border-slate-100 bg-slate-50/50">
           <button
             onClick={onClose}
-            className="w-full cursor-pointer py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-slate-200 active:scale-95 transition-all duration-300"
+            className={`w-full cursor-pointer py-4 rounded-2xl font-bold shadow-lg transition-all duration-300 active:scale-95 text-white ${
+              isConfirmed
+                ? "bg-slate-900 hover:bg-indigo-600 shadow-slate-200"
+                : "bg-amber-600 hover:bg-amber-700 shadow-amber-100"
+            }`}
           >
-            Acknowledge & Close
+            {isConfirmed ? "Acknowledge & Close" : "Review Request"}
           </button>
         </div>
       </div>

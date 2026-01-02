@@ -190,9 +190,14 @@ export default function PatientVerificationCard({ data }) {
           },
         }
       );
-      const updated = await res.json();
-      setStatus(updated.status);
-      setModalOpen(false);
+      if (res.ok) {
+        const updated = await res.json();
+        setStatus(updated.status);
+        alert(`Patient ${action}ed successfully`);
+        setModalOpen(false);
+      } else {
+        alert(`Failed to ${action} patient`);
+      }
     } finally {
       setLoading(false);
     }

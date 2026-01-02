@@ -9,10 +9,13 @@ import {
   User,
 } from "lucide-react";
 import PatientDetailsDrawer from "../../components/doctor/PatientDetailsDrawer";
+import { useNavigate } from "react-router-dom";
 
 const API = "http://localhost:8080";
 
 export default function SlotManager() {
+  const navigate = useNavigate(); // ✅ HOOK at top level
+
   const token = localStorage.getItem("token");
   const doctorId = localStorage.getItem("userId");
 
@@ -22,6 +25,7 @@ export default function SlotManager() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [dayBlocked, setDayBlocked] = useState(false);
   const [reasonForVisit, setReasonForVisit] = useState("");
+  const [status, setStatus] = useState("");
 
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("13:00");
@@ -36,6 +40,7 @@ export default function SlotManager() {
       .then((data) => {
         setSelectedPatient(data.patient);
         setReasonForVisit(data.reason);
+        setStatus(data.status);
         console.log("Fetched Patient Data:", data);
       });
   }, [selectedAppointmentId, token]);
@@ -62,6 +67,7 @@ export default function SlotManager() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
+      console.log("Loaded Slots:", data);
       setSlots(data.slots || []);
       setDayBlocked(data.dayBlocked);
     } catch (err) {
@@ -360,9 +366,14 @@ export default function SlotManager() {
         <PatientDetailsDrawer
           patient={selectedPatient}
           reason={reasonForVisit}
+          status={status}
           onClose={() => {
             setSelectedPatient(null);
             setselectedAppointmentId(null);
+
+            if (status === "REQUESTED") {
+              navigate("/doctor/dashboard/booking-requests"); // ✅ CORRECT
+            }
           }}
         />
       )}

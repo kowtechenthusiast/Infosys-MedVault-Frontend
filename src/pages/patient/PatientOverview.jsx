@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import ChartCard from "../../components/admin/ChartCard"; // Assuming ChartCard is reusable
 import { Calendar, Clock, UserCheck, HeartPulse } from "lucide-react"; // Icons for patient stats
+import { useAuth } from "../../context/useAuthContext";
 
 // --- Components Replicated from Admin Dashboard (for internal use) ---
 
@@ -85,7 +86,17 @@ const PatientGreeting = ({ name }) => (
 
 // --- Main Patient Overview Component ---
 
-export default function PatientOverview({ userInfo }) {
+export default function PatientOverview() {
+  const { name, user, logout } = useAuth();
+
+  const userInfo = {
+    name: name || user?.name || "Sarah Chen",
+    id: user?.id || "PAT-1004",
+    email: user?.email || "sarah.c@example.com",
+    displayStatus: user?.bloodGroup
+      ? `Blood Group: ${user.bloodGroup}`
+      : "Verified Patient",
+  };
   const patientStats = [
     {
       title: "Total Appointments",

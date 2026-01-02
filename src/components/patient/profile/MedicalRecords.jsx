@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   UploadCloud,
   FileText,
@@ -17,6 +17,7 @@ export default function MedicalRecords({ patientId, mustSetPasswordFirst }) {
 
   const [activeRecord, setActiveRecord] = useState(null);
   const isDisabled = mustSetPasswordFirst;
+  const fileInputRef = useRef(null);
 
   /* ================= FETCH ================= */
 
@@ -106,6 +107,7 @@ export default function MedicalRecords({ patientId, mustSetPasswordFirst }) {
             type="file"
             hidden
             id="upload"
+            ref={fileInputRef}
             onChange={(e) => setFile(e.target.files[0])}
           />
 
@@ -119,7 +121,14 @@ export default function MedicalRecords({ patientId, mustSetPasswordFirst }) {
           ) : (
             <div className="flex items-center gap-3 justify-center">
               <span className="font-medium">{file.name}</span>
-              <button onClick={() => setFile(null)}>
+              <button
+                onClick={() => {
+                  setFile(null);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ""; // 🔥 IMPORTANT
+                  }
+                }}
+              >
                 <Trash2 className="text-red-500" />
               </button>
             </div>

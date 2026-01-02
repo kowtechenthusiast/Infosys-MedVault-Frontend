@@ -42,7 +42,7 @@ export default function PatientDetailsModal({ patient, onClose }) {
       setLoadingRecords(true);
       try {
         const res = await fetch(
-          `http://localhost:8080/api/medical-records/patient/${patient.id}`,
+          `http://localhost:8080/api/medical-records/patient/${patient.patientId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("doctorToken")}`,
@@ -51,6 +51,7 @@ export default function PatientDetailsModal({ patient, onClose }) {
         );
         const data = await res.json();
         setRecords(data || []);
+        console.log("Fetched Medical Records:", data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -58,7 +59,7 @@ export default function PatientDetailsModal({ patient, onClose }) {
       }
     };
     fetchRecords();
-  }, [activeTab, patient.id]);
+  }, [activeTab, patient.patientId]);
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -67,14 +68,16 @@ export default function PatientDetailsModal({ patient, onClose }) {
         <div className="w-full md:w-80 bg-slate-900 p-8 text-white flex flex-col shrink-0">
           <div className="relative mb-8">
             <div className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-500/20">
-              {patient.name?.charAt(0)}
+              {patient.name?.charAt(0) || patient.patientName?.charAt(0) || "P"}
             </div>
             <div className="absolute -bottom-2 -right-2 bg-emerald-500 border-4 border-slate-900 w-8 h-8 rounded-full flex items-center justify-center">
               <Activity size={14} className="text-white" />
             </div>
           </div>
 
-          <h2 className="text-2xl font-black tracking-tight">{patient.name}</h2>
+          <h2 className="text-2xl font-black tracking-tight">
+            {patient.patientName || patient.name}
+          </h2>
           <p className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">
             Patient ID: #{patient.id}
           </p>
@@ -133,7 +136,7 @@ export default function PatientDetailsModal({ patient, onClose }) {
               <MedicalRecords
                 records={records}
                 loading={loadingRecords}
-                patientId={patient.id}
+                patientId={patient.patientId}
               />
             )}
           </div>
@@ -230,7 +233,7 @@ const MedicalRecords = ({ records, loading, patientId }) => {
           </p>
         </div>
       ) : (
-        records.map((rec) => {
+        records?.map((rec) => {
           const canView = rec.allowedDoctors?.some((doc) => doc.id == doctorId);
           return (
             <div
