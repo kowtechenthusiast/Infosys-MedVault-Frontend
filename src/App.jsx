@@ -10,11 +10,14 @@ import PatientOverview from "./pages/patient/PatientOverview";
 import BookAppointment from "./pages/patient/BookAppointment";
 import PatientHistory from "./pages/patient/PatientHistory";
 import PatientProfile from "./pages/patient/PatientProfile";
-
+import MedicalRecordAccessRequests from "./pages/patient/MedicalRecordAccessRequests";
 // Doctor
 import DoctorAuth from "./pages/doctor/DoctorAuth";
 import Pending from "./pages/Pending";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
+import DoctorOverview from "./pages/doctor/DoctorOverview";
+import SlotManager from "./pages/doctor/SlotManager";
+import AppointmentHistory from "./pages/doctor/AppointmentHistory";
 
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -24,6 +27,8 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import SetPassword from "./pages/SetPassword";
 import AuthRoleSelect from "./components/AuthRoleSelect";
 import MyAppointments from "./pages/doctor/MyAppointments";
+import BookingRequests from "./pages/doctor/BookingRequests";
+import PatientAppointment from "./pages/patient/PatientAppointment";
 
 export default function App() {
   return (
@@ -38,29 +43,31 @@ export default function App() {
 
         {/* Main Dashboard Wrapper */}
         <Route path="/patient/dashboard" element={<PatientDashboard />}>
-          {/* Default page */}
           <Route index element={<PatientOverview />} />
+          <Route path="book" element={<BookAppointment />} />
+          <Route path="appointments" element={<PatientAppointment />} />
+          <Route path="history" element={<PatientHistory />} />
+          <Route path="profile" element={<PatientProfile />} />
+          <Route
+            path="access-requests"
+            element={<MedicalRecordAccessRequests />}
+          />
         </Route>
 
-        {/* Direct routes (if user navigates via sidebar buttons) */}
-        <Route
-          path="/patient/dashboard/overview"
-          element={<PatientOverview />}
-        />
-        <Route path="/patient/dashboard/book" element={<BookAppointment />} />
-        <Route
-          path="/patient/dashboard/upcoming"
-          element={<MyAppointments />}
-        />
-        <Route path="/patient/dashboard/history" element={<PatientHistory />} />
-        <Route path="/patient/dashboard/profile" element={<PatientProfile />} />
         <Route path="/patient/pending" element={<Pending />} />
         <Route path="/patient/set-password" element={<SetPassword />} />
 
         {/* ---------------- DOCTOR ---------------- */}
         <Route path="/doctor/auth" element={<DoctorAuth />} />
         <Route path="/doctor/pending" element={<Pending />} />
-        <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+        <Route path="/doctor/dashboard" element={<DoctorDashboard />}>
+          <Route index element={<DoctorOverview />} />
+          <Route path="appointments" element={<MyAppointments />} />
+          <Route path="slots" element={<SlotManager />} />
+          <Route path="history" element={<AppointmentHistory />} />
+          <Route path="booking-requests" element={<BookingRequests />} />
+        </Route>
+
         <Route path="/doctor/set-password" element={<SetPassword />} />
 
         {/* ---------------- ADMIN ---------------- */}

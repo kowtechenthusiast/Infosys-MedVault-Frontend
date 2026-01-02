@@ -255,8 +255,12 @@ export default function PatientAuth() {
         });
 
         const data = await res.json();
+        console.log("Login Data:", data);
 
-        if (!res.ok) return setMessage(data.message || "Invalid login");
+        if (!res.ok) {
+          console.error("Login failed:", data);
+          return setMessage(data.message || "Invalid login");
+        }
 
         // Revised Login Logic
         // Assuming the patient login response also has a 'status' or similar field

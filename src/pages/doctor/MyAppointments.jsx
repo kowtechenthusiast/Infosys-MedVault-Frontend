@@ -24,6 +24,7 @@ const formatTime = (time) => time?.slice(0, 5); // HH:mm
 
 /* ================= APPOINTMENT CARD ================= */
 const AppointmentCard = ({ data, onViewPatient }) => {
+  console.log("AppointmentCard - data:", data);
   const [expanded, setExpanded] = useState(false);
 
   const urgent =
@@ -144,6 +145,7 @@ export default function MyAppointments() {
         );
         const data = await res.json();
         setAppointments(data || []);
+        console.log("Fetched appointments:", data);
       } catch (err) {
         console.error("Fetch error:", err);
       }

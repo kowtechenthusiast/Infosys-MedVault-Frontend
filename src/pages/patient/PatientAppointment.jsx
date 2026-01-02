@@ -42,6 +42,7 @@ export default function PatientAppointment() {
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         setAppointments(data || []);
+        console.log("Fetched appointments:", data);
       } catch (err) {
         console.error(err);
       } finally {

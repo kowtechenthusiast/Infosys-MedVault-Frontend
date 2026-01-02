@@ -25,7 +25,6 @@ export default function BasicDetails({
 }) {
   const buttonBase =
     "px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 justify-center";
-
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
       {/* --- Header & Edit Toggle --- */}
@@ -152,16 +151,26 @@ export default function BasicDetails({
 
           <div className="flex flex-col md:flex-row md:items-center gap-4 bg-slate-50 px-4 py-3 rounded-xl border border-slate-200">
             {/* Status */}
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-              {formData.idProofPath ? (
+            <div className="flex items-start gap-2 text-sm">
+              {formData.idProof || formData.idProofPath ? (
                 <>
-                  <Check size={16} className="text-emerald-500" />
-                  Document uploaded
+                  <Check size={16} className="text-emerald-500 mt-0.5" />
+
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-slate-700">
+                      Document uploaded
+                    </span>
+                    <span className="text-xs text-slate-500 truncate max-w-[220px]">
+                      {formData.idProof?.name}
+                    </span>
+                  </div>
                 </>
               ) : (
                 <>
-                  <ImageIcon size={16} className="text-slate-400" />
-                  No document uploaded
+                  <ImageIcon size={16} className="text-slate-400 mt-0.5" />
+                  <span className="font-semibold text-slate-500">
+                    No document uploaded
+                  </span>
                 </>
               )}
             </div>
