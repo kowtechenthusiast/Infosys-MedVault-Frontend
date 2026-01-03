@@ -41,6 +41,11 @@ export default function PatientSidebar() {
       label: "Access Requests",
       icon: User,
     },
+    {
+      path: "/patient/dashboard/emergency-requests",
+      label: "Emergency Requests",
+      icon: Activity,
+    },
   ];
 
   const handleLogout = async () => {

@@ -41,6 +41,11 @@ export default function DoctorSidebar() {
       label: "Booking Requests",
       icon: TrendingUp,
     },
+    {
+      path: "/doctor/dashboard/emergency-requests",
+      label: "Emergency Requests",
+      icon: TrendingUp,
+    },
   ];
 
   return (
