@@ -29,6 +29,8 @@ import AuthRoleSelect from "./components/AuthRoleSelect";
 import MyAppointments from "./pages/doctor/MyAppointments";
 import BookingRequests from "./pages/doctor/BookingRequests";
 import PatientAppointment from "./pages/patient/PatientAppointment";
+import EmergencyRequests from "./pages/doctor/EmergencyRequests";
+import EmergencyRequestPatient from "./pages/patient/EmergencyRequestPatient";
 
 export default function App() {
   return (
@@ -52,6 +54,10 @@ export default function App() {
             path="access-requests"
             element={<MedicalRecordAccessRequests />}
           />
+          <Route
+            path="emergency-requests"
+            element={<EmergencyRequestPatient />}
+          />
         </Route>
 
         <Route path="/patient/pending" element={<Pending />} />
@@ -66,6 +72,7 @@ export default function App() {
           <Route path="slots" element={<SlotManager />} />
           <Route path="history" element={<AppointmentHistory />} />
           <Route path="booking-requests" element={<BookingRequests />} />
+          <Route path="emergency-requests" element={<EmergencyRequests />} />
         </Route>
 
         <Route path="/doctor/set-password" element={<SetPassword />} />
