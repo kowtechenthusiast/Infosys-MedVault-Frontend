@@ -6,6 +6,11 @@ import {
   Activity,
   User,
   ChevronRight,
+  LayoutDashboard, // For Overview
+  CalendarCheck2, // For Upcoming Sessions
+  Clock9, // For Manage Slots
+  ClipboardList, // For Booking Requests
+  ShieldAlert, // For Emergency Requests
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/useAuthContext";
@@ -24,27 +29,27 @@ export default function DoctorSidebar() {
     {
       path: "/doctor/dashboard",
       label: "Dashboard Overview",
-      icon: BarChart3,
+      icon: LayoutDashboard, // Standard professional dashboard icon
     },
     {
       path: "/doctor/dashboard/appointments",
       label: "Upcoming Sessions",
-      icon: Calendar,
+      icon: CalendarCheck2, // More specific than a plain calendar
     },
     {
       path: "/doctor/dashboard/slots",
       label: "Manage Slots",
-      icon: TrendingUp,
+      icon: Clock9, // Represents time availability
     },
     {
       path: "/doctor/dashboard/booking-requests",
       label: "Booking Requests",
-      icon: TrendingUp,
+      icon: ClipboardList, // Represents a list of pending tasks/forms
     },
     {
       path: "/doctor/dashboard/emergency-requests",
       label: "Emergency Requests",
-      icon: TrendingUp,
+      icon: ShieldAlert, // Matches the 'Emergency Signal' branding we created
     },
   ];
 
