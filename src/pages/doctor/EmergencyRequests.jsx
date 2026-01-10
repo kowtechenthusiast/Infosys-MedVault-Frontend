@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/useAuthContext";
 import PatientDetailsModal from "../../components/doctor/PatientDetailsModal";
+import { toast } from "react-toastify";
 
 /* ================= SEVERITY STYLES ================= */
 const severityStyles = {
@@ -156,11 +157,13 @@ export default function EmergencyRequests() {
     });
     fetchEmergencyRequests();
     setSelectedRequest(null);
+    toast.success("Emergency request accepted successfully");
   };
 
   const handleIgnore = async (id) => {
     await fetch(`${API_BASE}/${id}/ignore`, { method: "PATCH" });
     fetchEmergencyRequests();
+    toast.info("Emergency request ignored");
   };
 
   return (

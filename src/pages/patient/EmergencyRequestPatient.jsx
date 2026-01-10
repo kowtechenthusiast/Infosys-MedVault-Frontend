@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/useAuthContext";
 import { DoctorDetailModalEmergency } from "../../components/patient/DoctorDetailModalEmergency";
+import { toast } from "react-toastify";
 
 /* ================= SEVERITY BADGE ================= */
 const SeverityBadge = ({ level }) => {
@@ -146,9 +147,11 @@ export default function EmergencyRequestPatient() {
           severityLevel: "MEDIUM",
           location: user?.city || "",
         });
+        toast.success("Emergency request broadcasted successfully");
         fetchRequests();
       }
     } catch (error) {
+      toast.error("Failed to broadcast emergency request");
       console.error("Broadcast failed", error);
     }
   };

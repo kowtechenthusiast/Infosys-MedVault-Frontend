@@ -51,6 +51,11 @@ export default function DoctorSidebar() {
       label: "Emergency Requests",
       icon: ShieldAlert, // Matches the 'Emergency Signal' branding we created
     },
+    {
+      path: "/doctor/dashboard/reviews",
+      label: "Reviews and Ratings",
+      icon: TrendingUp, // Represents growth and feedback
+    },
   ];
 
   return (
@@ -65,14 +70,15 @@ export default function DoctorSidebar() {
         </div>
 
         {/* Profile Card */}
-        <div className="mb-8 p-3 flex items-center gap-3 rounded-2xl bg-blue-50 border">
+        <div className="mb-8 p-3 flex items-center gap-3 rounded-2xl bg-blue-50">
           <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
             <User size={20} />
           </div>
 
           <div className="flex-1">
             <h4 className="text-sm font-bold">{doctorInfo.name}</h4>
-            <p className="text-xs text-slate-500">{doctorInfo.specialty}</p>
+            <p className="text-xs text-blue-500">{doctorInfo.specialty}</p>
+            <p className="text-xs bolder text-blue-800 font-bold">DOCTOR</p>
           </div>
 
           <ChevronRight size={16} className="text-slate-400" />

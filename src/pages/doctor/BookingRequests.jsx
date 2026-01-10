@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import PatientDetailsModal from "../../components/doctor/PatientDetailsModal";
+import { toast } from "react-toastify";
 
 /* ================= REQUEST CARD ================= */
 const RequestCard = ({ appt, onViewDetails, onApprove, onReject, loading }) => {
@@ -140,12 +141,12 @@ export default function BookingRequests() {
           },
         }
       );
-
+      toast.success("Request approved successfully");
       // Remove approved request from UI
       setRequests((prev) => prev.filter((r) => r.id !== appointmentId));
     } catch (err) {
       console.error("Approve failed:", err);
-      alert("Failed to approve request");
+      toast.error("Failed to approve request");
     } finally {
       setActionLoadingId(null);
     }
@@ -168,10 +169,11 @@ export default function BookingRequests() {
       );
 
       // Remove rejected request from UI
+      toast.success("Request rejected successfully");
       setRequests((prev) => prev.filter((r) => r.id !== appointmentId));
     } catch (err) {
       console.error("Reject failed:", err);
-      alert("Failed to reject request");
+      toast.error("Failed to reject request");
     } finally {
       setActionLoadingId(null);
     }
