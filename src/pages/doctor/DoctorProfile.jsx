@@ -18,6 +18,7 @@ import {
   AlertCircle,
   IndianRupee,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 /* ================= REUSABLE MODERN INPUT ================= */
 const ProfileInput = memo(
@@ -200,10 +201,10 @@ export default function DoctorProfile() {
 
       if (!res.ok) throw new Error("Update failed");
 
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {
-      alert("Error updating profile. Please try again.");
+      toast.error("Error updating profile. Please try again.");
       console.error(err);
     } finally {
       setLoading(false);

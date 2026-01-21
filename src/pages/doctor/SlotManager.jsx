@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import PatientDetailsDrawer from "../../components/doctor/PatientDetailsDrawer";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const API = "http://localhost:8080";
 
@@ -101,6 +102,7 @@ export default function SlotManager() {
         durationMinutes: duration,
       }),
     });
+    toast.success("Slots generated successfully");
     loadSlots();
   };
 
@@ -116,6 +118,7 @@ export default function SlotManager() {
         body: JSON.stringify({ doctorId, date: selectedDate }),
       }
     );
+    toast.success(`Day ${dayBlocked ? "unblocked" : "blocked"} successfully`);
     loadSlots();
   };
 
@@ -125,6 +128,9 @@ export default function SlotManager() {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     });
+    toast.success(
+      `Slot ${slot.status === "BLOCKED" ? "enabled" : "disabled"} successfully`
+    );
     loadSlots();
   };
 

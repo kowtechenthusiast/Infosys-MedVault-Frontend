@@ -2,6 +2,7 @@ import { useState } from "react";
 import patientImageUrl from "../../assets/patient.jpg";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuthContext";
+import { toast } from "react-toastify";
 
 // --- NEW OTP Input component for the 5-block input ---
 const OtpInput = ({ otp, setOtp }) => {
@@ -125,7 +126,7 @@ function LoginHelper() {
 
 export default function PatientAuth() {
   const [current, setCurrent] = useState("login");
-  const [message, setMessage] = useState("");
+  // const [message, setMessage] = useState("");
   const { setRole, setName } = useAuth("");
   const [userId, setUserId] = useState(0);
   const navigate = useNavigate();
@@ -142,7 +143,6 @@ export default function PatientAuth() {
   });
 
   const switchForm = () => {
-    setMessage("");
     setIsOtpSent(false); // Reset OTP state
     setOtp(["", "", "", "", ""]);
     setUser({
@@ -162,9 +162,9 @@ export default function PatientAuth() {
 
   // New handler for sending OTP
   const handleSendOtp = async () => {
-    setMessage("");
     if (!user.fullName || !user.email) {
-      return setMessage("Full Name and Email are required.");
+      toast.warn("Full Name and Email are required.");
+      return;
     }
 
     try {
@@ -186,21 +186,19 @@ export default function PatientAuth() {
 
       if (!res.ok) {
         // Includes duplicate email check
-        setMessage(data.message || "Failed to send OTP.");
+        toast.error(data.message || "Failed to send OTP.");
         return;
       }
 
-      setMessage("OTP sent to your email. Please check your inbox.");
+      toast.info("OTP sent to your email. Please check your inbox.");
       setIsOtpSent(true);
     } catch (err) {
-      setMessage("Server error during OTP request. Try again later.");
       console.error(err);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
 
     try {
       // -------------------- REGISTRATION (FINAL STEP) --------------------
@@ -212,7 +210,8 @@ export default function PatientAuth() {
 
         const otpString = otp.join("");
         if (otpString.length !== 5) {
-          return setMessage("Please enter the 5-digit OTP.");
+          toast.warn("Please enter the 5-digit OTP.");
+          return;
         }
 
         const res = await fetch(`${API_URL}/verify-otp`, {
@@ -230,7 +229,8 @@ export default function PatientAuth() {
         console.log("Data:", data);
 
         if (!res.ok) {
-          return setMessage(data.message || "OTP verification failed.");
+          toast.error(data.message || "OTP verification failed.");
+          return;
         }
 
         // ✅ MOVE TO SET PASSWORD PAGE WITH STATE
@@ -259,7 +259,8 @@ export default function PatientAuth() {
 
         if (!res.ok) {
           console.error("Login failed:", data);
-          return setMessage(data.message || "Invalid login");
+          toast.error(data.message || "Login failed");
+          return;
         }
 
         // Revised Login Logic
@@ -274,12 +275,12 @@ export default function PatientAuth() {
         if (data.status === "PENDING") {
           navigate("/patient/pending"); // Redirect to /pending if status is PENDING
         } else {
-          setMessage("Login Successful!");
+          toast.success("Login Successful!");
           navigate("/patient/dashboard"); // Redirect to /dashboard if status is APPROVED/ACTIVE
         }
       }
     } catch (err) {
-      setMessage("Server error. Try again later.");
+      toast.error("Server error. Try again later.");
       console.error(err);
     }
   };
@@ -316,12 +317,6 @@ export default function PatientAuth() {
           <h2 className="text-4xl font-extrabold text-purple-800 mb-8 text-center font-poppins">
             {current === "login" ? "Patient Login" : "Verify Your Email"}
           </h2>
-
-          {message && (
-            <p className="text-center text-red-600 font-medium mb-3">
-              {message}
-            </p>
-          )}
 
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             {/* ---------------- REGISTRATION FIELDS ---------------- */}

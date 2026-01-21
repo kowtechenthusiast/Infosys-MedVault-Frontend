@@ -2,6 +2,7 @@ import { useState } from "react";
 import DOCTOR_IMAGE_URL from "../../assets/doctor.jpg";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuthContext";
+import { toast } from "react-toastify";
 
 /* ---------------- OTP INPUT ---------------- */
 const OtpInput = ({ otp, setOtp }) => {
@@ -87,7 +88,6 @@ function FloatingInput({
 /* ---------------- MAIN COMPONENT ---------------- */
 export default function DoctorAuth() {
   const [current, setCurrent] = useState("login");
-  const [message, setMessage] = useState("");
   const { setRole, setName } = useAuth();
   const navigate = useNavigate();
 
@@ -103,7 +103,6 @@ export default function DoctorAuth() {
   const API_URL = "http://localhost:8080/api/auth";
 
   const switchForm = () => {
-    setMessage("");
     setIsOtpSent(false);
     setOtp(["", "", "", "", ""]);
     setForm({ fullName: "", email: "", password: "" });
@@ -115,9 +114,10 @@ export default function DoctorAuth() {
 
   /* ---------------- SEND OTP ---------------- */
   const handleSendOtp = async () => {
-    setMessage("");
-    if (!form.fullName || !form.email)
-      return setMessage("Full Name and Email are required.");
+    if (!form.fullName || !form.email) {
+      toast.info("Full Name and Email are required.");
+      return;
+    }
 
     try {
       const res = await fetch(`${API_URL}/generate-otp`, {
@@ -131,19 +131,20 @@ export default function DoctorAuth() {
       });
 
       const data = await res.json();
-      if (!res.ok) return setMessage(data.message || "Failed to send OTP.");
-
-      setMessage("OTP sent to your email.");
+      if (!res.ok) {
+        toast.error(data.message || "Failed to send OTP.");
+        return;
+      }
+      toast.success("OTP sent to your email.");
       setIsOtpSent(true);
     } catch {
-      setMessage("Server error. Try again later.");
+      toast.error("Server error. Try again later.");
     }
   };
 
   /* ---------------- SUBMIT ---------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
 
     try {
       /* -------- REGISTER -------- */
@@ -151,8 +152,10 @@ export default function DoctorAuth() {
         if (!isOtpSent) return handleSendOtp();
 
         const otpString = otp.join("");
-        if (otpString.length !== 5)
-          return setMessage("Please enter the 5-digit OTP.");
+        if (otpString.length !== 5) {
+          toast.warn("Please enter the 5-digit OTP.");
+          return;
+        }
 
         const res = await fetch(`${API_URL}/verify-otp`, {
           method: "POST",
@@ -165,8 +168,10 @@ export default function DoctorAuth() {
         });
 
         const data = await res.json();
-        if (!res.ok)
-          return setMessage(data.message || "OTP verification failed.");
+        if (!res.ok) {
+          toast.error(data.message || "OTP verification failed.");
+          return;
+        }
 
         navigate("/doctor/set-password", {
           state: {
@@ -187,7 +192,10 @@ export default function DoctorAuth() {
         });
 
         const data = await res.json();
-        if (!res.ok) return setMessage(data.message || "Invalid login");
+        if (!res.ok) {
+          toast.error(data.message || "Login failed");
+          return;
+        }
 
         localStorage.setItem("userId", data.userId);
         localStorage.setItem("role", "doctor");
@@ -198,12 +206,12 @@ export default function DoctorAuth() {
         if (data.status === "PENDING") {
           navigate("/doctor/pending"); // Redirect to /pending if status is PENDING
         } else {
-          setMessage("Login Successful!");
+          toast.success("Login Successful!");
           navigate("/doctor/dashboard"); // Redirect to /dashboard if status is APPROVED/ACTIVE
         }
       }
     } catch {
-      setMessage("Server error. Try again later.");
+      toast.error("Server error. Try again later.");
     }
   };
 
@@ -224,12 +232,6 @@ export default function DoctorAuth() {
           <h2 className="text-4xl font-bold text-blue-800 text-center mb-6">
             {current === "login" ? "Doctor Login" : "Verify Your Email"}
           </h2>
-
-          {message && (
-            <p className="text-center text-red-600 font-medium mb-3">
-              {message}
-            </p>
-          )}
 
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             {current === "register" && (

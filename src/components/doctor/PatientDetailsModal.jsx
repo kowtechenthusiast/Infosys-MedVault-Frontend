@@ -31,7 +31,12 @@ const doctorId = localStorage.getItem("userId");
 console.log("Doctor ID from localStorage:", doctorId);
 
 export default function PatientDetailsModal({ patient, onClose }) {
-  console.log("PatientDetailsModal - patient:", patient);
+  console.log(
+    "PatientDetailsModal - patient:",
+    patient,
+    " id:",
+    patient?.patientId
+  );
   const [activeTab, setActiveTab] = useState("basic");
   const [records, setRecords] = useState([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
@@ -42,7 +47,7 @@ export default function PatientDetailsModal({ patient, onClose }) {
       setLoadingRecords(true);
       try {
         const res = await fetch(
-          `http://localhost:8080/api/medical-records/patient/${patient.patientId}`,
+          `http://localhost:8080/api/medical-records/patient/${patient?.patientId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("doctorToken")}`,
@@ -59,7 +64,7 @@ export default function PatientDetailsModal({ patient, onClose }) {
       }
     };
     fetchRecords();
-  }, [activeTab, patient.patientId]);
+  }, [activeTab, patient?.patientId]);
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -68,7 +73,9 @@ export default function PatientDetailsModal({ patient, onClose }) {
         <div className="w-full md:w-80 bg-slate-900 p-8 text-white flex flex-col shrink-0">
           <div className="relative mb-8">
             <div className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-500/20">
-              {patient.name?.charAt(0) || patient.patientName?.charAt(0) || "P"}
+              {patient?.name?.charAt(0) ||
+                patient?.patientName?.charAt(0) ||
+                "P"}
             </div>
             <div className="absolute -bottom-2 -right-2 bg-emerald-500 border-4 border-slate-900 w-8 h-8 rounded-full flex items-center justify-center">
               <Activity size={14} className="text-white" />
@@ -76,27 +83,27 @@ export default function PatientDetailsModal({ patient, onClose }) {
           </div>
 
           <h2 className="text-2xl font-black tracking-tight">
-            {patient.patientName || patient.name}
+            {patient?.patientName || patient?.name}
           </h2>
           <p className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">
-            Patient ID: #{patient.id}
+            Patient ID: #{patient?.id}
           </p>
 
           <div className="space-y-4 mt-auto">
             <SidebarItem
               icon={<Mail size={16} />}
               label="Email"
-              value={patient.email || "Not provided"}
+              value={patient?.email || "Not provided"}
             />
             <SidebarItem
               icon={<Phone size={16} />}
               label="Emergency"
-              value={patient.phone}
+              value={patient?.phone}
             />
             <SidebarItem
               icon={<MapPin size={16} />}
               label="Location"
-              value={`${patient.city}, ${patient.state}`}
+              value={`${patient?.city}, ${patient?.state}`}
             />
           </div>
         </div>
@@ -136,7 +143,7 @@ export default function PatientDetailsModal({ patient, onClose }) {
               <MedicalRecords
                 records={records}
                 loading={loadingRecords}
-                patientId={patient.patientId}
+                patientId={patient?.patientId}
               />
             )}
           </div>
@@ -152,20 +159,20 @@ const BasicInfo = ({ patient }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-bottom-4">
     <StatCard
       label="Gender"
-      value={patient.gender}
+      value={patient?.gender}
       icon={<User className="text-blue-500" />}
     />
     <StatCard
       label="Blood Group"
-      value={patient.bloodGroup}
+      value={patient?.bloodGroup}
       icon={<Droplets className="text-rose-500" />}
     />
     <StatCard
       label="Address"
-      value={patient.address}
+      value={patient?.address}
       className="md:col-span-2"
     />
-    <StatCard label="Pincode" value={patient.pincode} />
+    <StatCard label="Pincode" value={patient?.pincode} />
     <StatCard label="Country" value="India" />
   </div>
 );
@@ -174,28 +181,28 @@ const HealthMetrics = ({ patient }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-4">
     <MetricCard
       label="Sugar Level"
-      value={patient.sugarLevel}
+      value={patient?.sugarLevel}
       unit="mg/dL"
       icon={<Zap />}
       color="bg-amber-500"
     />
     <MetricCard
       label="Blood Pressure"
-      value={`${patient.bpSys}/${patient.bpDia}`}
+      value={`${patient?.bpSys}/${patient?.bpDia}`}
       unit="mmHg"
       icon={<Activity />}
       color="bg-rose-500"
     />
     <MetricCard
       label="SpO₂ Level"
-      value={patient.spo2}
+      value={patient?.spo2}
       unit="%"
       icon={<Wind />}
       color="bg-blue-500"
     />
     <MetricCard
       label="Heart Rate"
-      value={patient.heartRate}
+      value={patient?.heartRate}
       unit="BPM"
       icon={<HeartPulse />}
       color="bg-emerald-500"
@@ -205,10 +212,10 @@ const HealthMetrics = ({ patient }) => (
 
 const Lifestyle = ({ patient }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-bottom-4">
-    <StatCard label="Sleep Duration" value={`${patient.sleepHours} hrs/day`} />
-    <StatCard label="Dietary Preference" value={patient.diet} />
-    <StatCard label="Smoking Status" value={patient.smoking} />
-    <StatCard label="Alcohol Consumption" value={patient.alcohol} />
+    <StatCard label="Sleep Duration" value={`${patient?.sleepHours} hrs/day`} />
+    <StatCard label="Dietary Preference" value={patient?.diet} />
+    <StatCard label="Smoking Status" value={patient?.smoking} />
+    <StatCard label="Alcohol Consumption" value={patient?.alcohol} />
   </div>
 );
 

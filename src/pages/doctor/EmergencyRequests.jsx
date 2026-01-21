@@ -6,255 +6,243 @@ import {
   Check,
   X,
   MessageSquare,
-  Phone,
   ArrowRight,
 } from "lucide-react";
 import { useAuth } from "../../context/useAuthContext";
+import PatientDetailsModal from "../../components/doctor/PatientDetailsModal";
+import { toast } from "react-toastify";
 
-// --- Sub-component: Emergency Request Card ---
-const RequestCard = ({ request, onAccept, onIgnore, type }) => (
-  <div className="group relative p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-    {/* Status Indicator Glow */}
-    <div
-      className={`absolute top-0 left-0 w-1 h-full rounded-l-2xl ${
-        type === "pending"
-          ? "bg-rose-500 shadow-[2px_0_15px_rgba(244,63,94,0.4)]"
-          : "bg-teal-500"
-      }`}
-    />
+/* ================= SEVERITY STYLES ================= */
+const severityStyles = {
+  CRITICAL: "bg-rose-600 text-white shadow-[0_0_10px_rgba(244,63,94,0.5)]",
+  HIGH: "bg-orange-500 text-white",
+  MEDIUM: "bg-amber-400 text-white",
+  LOW: "bg-indigo-500 text-white",
+};
 
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div className="flex items-start gap-4">
-        <div
-          className={`p-4 rounded-2xl ${
-            type === "pending"
-              ? "bg-rose-50 text-rose-600"
-              : "bg-teal-50 text-teal-600"
-          }`}
-        >
-          <User size={28} />
+/* ================= REQUEST CARD ================= */
+const RequestCard = ({ request, onAccept, onIgnore, onViewDetails, type }) => {
+  return (
+    <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-100 hover:shadow-xl transition-all">
+      {/* Side indicator */}
+      <div
+        className={`absolute inset-y-0 left-0 w-1.5 rounded-l-[2rem] ${
+          type === "pending" ? "bg-rose-500" : "bg-emerald-500"
+        }`}
+      />
+
+      <div className="flex flex-col lg:flex-row justify-between gap-6">
+        {/* LEFT */}
+        <div className="flex gap-4">
+          <div
+            className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
+              type === "pending"
+                ? "bg-rose-50 text-rose-600"
+                : "bg-emerald-50 text-emerald-600"
+            }`}
+          >
+            <User size={26} />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg font-black text-slate-800">
+                {request.patientName}
+              </h3>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase ${
+                  severityStyles[request.severityLevel] || severityStyles.LOW
+                }`}
+              >
+                {request.severityLevel}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 text-sm text-slate-400">
+              <span className="flex items-center gap-1">
+                <Clock size={14} /> {request.timestamp}
+              </span>
+              <button
+                onClick={() => onViewDetails(request)}
+                className="flex items-center gap-1 text-indigo-600 font-bold text-xs uppercase tracking-wider hover:text-indigo-700"
+              >
+                Inspect Vitals <ArrowRight size={12} />
+              </button>
+            </div>
+
+            <div className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600 italic flex gap-2">
+              <MessageSquare size={16} className="text-slate-400 mt-0.5" />“
+              {request.message}”
+            </div>
+          </div>
         </div>
 
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-bold text-slate-800">
-              {request.patientName}
-            </h3>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
-              ID: {request.patientId}
-            </span>
-          </div>
+        {/* RIGHT */}
+        <div className="flex items-center gap-3">
+          {type === "pending" ? (
+            <>
+              <button
+                onClick={() => onIgnore(request.id)}
+                className="p-3 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
+              >
+                <X size={22} />
+              </button>
+              <button
+                onClick={() => onAccept(request.id)}
+                className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white font-black flex items-center gap-2 transition-all shadow-lg"
+              >
+                <Check size={18} /> Accept Case
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-end">
+              {request.status === "ACCEPTED" ? (
+                <span className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 font-black text-sm flex items-center gap-2">
+                  <Check size={16} /> Accepted
+                </span>
+              ) : (
+                <span className="px-4 py-2 rounded-xl bg-slate-100 text-slate-500 font-black text-sm flex items-center gap-2">
+                  <X size={16} /> Ignored
+                </span>
+              )}
 
-          <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-            <span className="flex items-center gap-1">
-              <Clock size={14} /> {request.timestamp}
-            </span>
-            <span className="flex items-center gap-1">
-              <Phone size={14} /> {request.phone}
-            </span>
-          </div>
-
-          <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-100 italic text-slate-600 text-sm flex gap-2">
-            <MessageSquare
-              size={16}
-              className="shrink-0 mt-0.5 text-slate-400"
-            />
-            "{request.message}"
-          </div>
+              <span className="text-[10px] text-slate-400 mt-1 font-medium">
+                Responded by you
+              </span>
+            </div>
+          )}
         </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        {type === "pending" ? (
-          <>
-            <button
-              onClick={() => onIgnore(request.id)}
-              className="p-3 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"
-            >
-              <X size={24} />
-            </button>
-            <button
-              onClick={() => onAccept(request.id)}
-              className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-blue-200 hover:bg-blue-600 transition-all"
-            >
-              <Check size={20} />
-              Accept Case
-            </button>
-          </>
-        ) : (
-          <button className="flex items-center gap-2 px-6 py-3 bg-teal-50 text-teal-600 rounded-xl font-semibold cursor-default">
-            <Check size={20} />
-            Accepted
-          </button>
-        )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
+/* ================= MAIN ================= */
 export default function EmergencyRequests() {
-  const [view, setView] = useState("pending"); // 'pending' or 'accepted'
+  const [view, setView] = useState("PENDING");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const { user } = useAuth();
+  console.log("Logged in doctor:", user);
 
-  // --- Backend Connection Logic ---
+  const API_BASE = "http://localhost:8080/api/emergencies";
+
   useEffect(() => {
     fetchEmergencyRequests();
-  }, []);
+  }, [view]);
 
   const fetchEmergencyRequests = async () => {
     setLoading(true);
     try {
-      // Replace with: const response = await axios.get('/api/emergencies');
-      // Simulated Mock Data
-      const mockData = [
-        {
-          id: 1,
-          patientName: "Sarah Connor",
-          patientId: "PX-204",
-          phone: "+1 555-0123",
-          message:
-            "Severe chest pain and shortness of breath for the last 20 minutes.",
-          timestamp: "2 mins ago",
-          status: "pending",
-        },
-        {
-          id: 2,
-          patientName: "Marcus Wright",
-          patientId: "PX-992",
-          phone: "+1 555-0199",
-          message: "High fever (103°F) and persistent vomiting.",
-          timestamp: "15 mins ago",
-          status: "pending",
-        },
-        {
-          id: 3,
-          patientName: "Kyle Reese",
-          patientId: "PX-110",
-          phone: "+1 555-0144",
-          message: "Post-surgery incision site looks inflamed and bleeding.",
-          timestamp: "1 hour ago",
-          status: "accepted",
-        },
-      ];
-      setRequests(mockData);
-    } catch (error) {
-      console.error("Failed to fetch requests", error);
+      let url = `${API_BASE}?city=${user.city}`;
+
+      if (view === "PENDING") {
+        url += `&status=PENDING`;
+      } else {
+        // My Responses = ACCEPTED + IGNORED
+        url += `&status=ACCEPTED,IGNORED`;
+      }
+
+      const res = await fetch(url);
+      if (res.ok) setRequests(await res.json());
     } finally {
       setLoading(false);
     }
   };
 
   const handleAccept = async (id) => {
-    // API Call: await axios.patch(`/api/emergencies/${id}`, { status: 'accepted' });
-    setRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, status: "accepted" } : req))
-    );
+    await fetch(`${API_BASE}/${id}/accept?doctorId=${user.userId}`, {
+      method: "PATCH",
+    });
+    fetchEmergencyRequests();
+    setSelectedRequest(null);
+    toast.success("Emergency request accepted successfully");
   };
 
   const handleIgnore = async (id) => {
-    // API Call: await axios.delete(`/api/emergencies/${id}`);
-    setRequests((prev) => prev.filter((req) => req.id !== id));
+    await fetch(`${API_BASE}/${id}/ignore`, { method: "PATCH" });
+    fetchEmergencyRequests();
+    toast.info("Emergency request ignored");
   };
 
-  const filteredRequests = requests.filter((req) => req.status === view);
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* 1. Header Section */}
-      <div className="relative p-8 rounded-3xl bg-white border border-rose-50 shadow-[0_0_40px_-10px_rgba(244,63,94,0.1)] overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-br from-rose-100 to-orange-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-40"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-rose-500 rounded-lg animate-pulse">
-                <AlertCircle className="text-white" size={24} />
-              </div>
-              <h1 className="text-3xl font-bold text-slate-800">
-                Emergency Queue
-              </h1>
-            </div>
-            <p className="text-slate-500 mt-2">
-              High-priority medical requests requiring immediate clinical
-              review.
-            </p>
+    <div className="space-y-8 p-6 md:p-8 bg-slate-50/30 rounded-[3rem] border border-white shadow-2xl max-w-6xl mx-auto">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100">
+        <div className="flex items-center gap-5">
+          <div className="p-4 bg-rose-600 rounded-2xl shadow-lg shadow-rose-300/40 animate-pulse">
+            <AlertCircle size={30} className="text-white" />
           </div>
+          <div>
+            <h1 className="text-3xl font-black text-slate-800">
+              Emergency Queue
+            </h1>
+            <p className="text-slate-400">Real-time patient distress signals</p>
+          </div>
+        </div>
 
-          <div className="flex flex-col items-end">
-            <span className="text-4xl font-black text-rose-500 drop-shadow-sm">
-              {requests.filter((r) => r.status === "pending").length}
-            </span>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Active Alerts
-            </span>
+        <div className="text-center px-8 py-4 rounded-3xl bg-slate-50 border border-slate-100">
+          <div className="text-4xl font-black text-rose-600">
+            {requests.length}
+          </div>
+          <div className="text-[10px] uppercase tracking-widest font-black text-slate-400">
+            Active Alerts
           </div>
         </div>
       </div>
 
-      {/* 2. Switcher (Cyber Style) */}
-      <div className="flex items-center p-1 bg-slate-100/50 rounded-2xl border border-slate-100 w-full max-w-md">
-        <button
-          onClick={() => setView("pending")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300
-              ${
-                view === "pending"
-                  ? "bg-white text-rose-600 shadow-sm border border-rose-100"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
-        >
-          Pending Requests
-          <span
-            className={`ml-1 px-2 py-0.5 rounded-md text-[10px] ${
-              view === "pending"
-                ? "bg-rose-500 text-white"
-                : "bg-slate-200 text-slate-500"
+      {/* SWITCHER */}
+      <div className="flex p-1 bg-white rounded-2xl border border-slate-100 max-w-sm">
+        {["PENDING", "ACCEPTED"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setView(s)}
+            className={`flex-1 py-3 rounded-xl font-black text-sm transition-all ${
+              view === s ? "bg-slate-900 text-white" : "text-slate-400"
             }`}
           >
-            {requests.filter((r) => r.status === "pending").length}
-          </span>
-        </button>
-        <button
-          onClick={() => setView("accepted")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300
-              ${
-                view === "accepted"
-                  ? "bg-white text-teal-600 shadow-sm border border-teal-100"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
-        >
-          Accepted Cases
-        </button>
+            {s === "PENDING" ? "Incoming" : "My Responses"}
+          </button>
+        ))}
       </div>
 
-      {/* 3. List Section */}
+      {/* LIST */}
       <div className="space-y-4">
         {loading ? (
           <div className="py-20 text-center text-slate-400 animate-pulse">
-            Establishing secure uplink to emergency server...
+            Scanning emergency network…
           </div>
-        ) : filteredRequests.length > 0 ? (
-          filteredRequests.map((req) => (
+        ) : requests.length ? (
+          requests.map((req) => (
             <RequestCard
               key={req.id}
               request={req}
-              type={view}
+              type={view.toLowerCase()}
               onAccept={handleAccept}
               onIgnore={handleIgnore}
+              onViewDetails={setSelectedRequest}
             />
           ))
         ) : (
-          <div className="py-20 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50/50">
-            <div className="p-4 bg-white rounded-full shadow-sm text-slate-300 mb-4">
-              <Check size={40} />
-            </div>
-            <h3 className="text-slate-500 font-medium">
-              No {view} requests at this time.
-            </h3>
-            <p className="text-slate-400 text-sm">System is currently clear.</p>
+          <div className="py-20 text-center bg-white rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400">
+            No emergency requests found.
           </div>
         )}
       </div>
+
+      {/* MODAL */}
+      {selectedRequest && (
+        <PatientDetailsModal
+          patient={{
+            ...selectedRequest.patient,
+            patientId: selectedRequest.patient.id,
+            message: selectedRequest.message,
+            severity: selectedRequest.severityLevel,
+          }}
+          onClose={() => setSelectedRequest(null)}
+        />
+      )}
     </div>
   );
 }

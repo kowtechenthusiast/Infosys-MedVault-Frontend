@@ -4,7 +4,7 @@ import {
   ChevronRight,
   CalendarCheck,
   History,
-  Search,
+  ClockAlert,
   CalendarDays,
 } from "lucide-react";
 import AppointmentCard from "../../components/patient/AppointmentCard";
@@ -19,7 +19,7 @@ const isUpcoming = (date, time) => {
 export default function PatientAppointment() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("upcoming"); // 'upcoming' or 'history'
+  const [activeTab, setActiveTab] = useState("upcoming");
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 3;
@@ -32,7 +32,6 @@ export default function PatientAppointment() {
             "userId"
           )}`,
           {
-            method: "GET",
             headers: {
               Authorization: `Bearer ${localStorage.getItem("patientToken")}`,
             },
@@ -41,8 +40,8 @@ export default function PatientAppointment() {
 
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
+        console.log("Fetched Appointments:", data);
         setAppointments(data || []);
-        console.log("Fetched appointments:", data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -53,17 +52,32 @@ export default function PatientAppointment() {
     fetchAppointments();
   }, []);
 
-  /* ---------- FILTER & PAGINATION LOGIC ---------- */
-  const upcoming = appointments.filter((a) =>
-    isUpcoming(a.appointmentDate, a.appointmentTime)
+  /* ---------- FILTERING ---------- */
+  const upcoming = appointments.filter(
+    (a) =>
+      isUpcoming(a.appointmentDate, a.appointmentTime) &&
+      a.status !== "CANCELLED"
   );
 
   const history = appointments.filter(
-    (a) => !isUpcoming(a.appointmentDate, a.appointmentTime)
+    (a) =>
+      !isUpcoming(a.appointmentDate, a.appointmentTime) &&
+      a.status !== "REQUESTED"
   );
 
-  const currentList = activeTab === "upcoming" ? upcoming : history;
+  const expired = appointments.filter(
+    (a) =>
+      !isUpcoming(a.appointmentDate, a.appointmentTime) &&
+      a.status === "REQUESTED"
+  );
 
+  const sectionMap = {
+    upcoming,
+    history,
+    expired,
+  };
+
+  const currentList = sectionMap[activeTab];
   const totalPages = Math.ceil(currentList.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentAppointments = currentList.slice(
@@ -73,127 +87,94 @@ export default function PatientAppointment() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 space-y-4">
+      <div className="flex items-center justify-center p-20">
         <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-        <p className="text-slate-500 font-medium animate-pulse">
-          Syncing your health records...
-        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      {/* Header & Switcher */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-        <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">
-            My{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-cyan-500">
-              Appointments
-            </span>
-          </h2>
-          <p className="text-slate-500 text-sm mt-1 font-medium">
-            View and manage your clinical sessions
-          </p>
-        </div>
+      {/* Header */}
+      <div className="bg-white p-6 rounded-3xl  shadow-sm">
+        <h2 className="text-3xl font-black text-slate-800">
+          My <span className="text-blue-600">Appointments</span>
+        </h2>
+        <p className="text-slate-500 text-sm mt-1">
+          Track your medical consultations
+        </p>
 
-        {/* Professional Segmented Switcher */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full lg:w-auto">
-          <button
-            onClick={() => {
-              setActiveTab("upcoming");
-              setCurrentPage(1);
-            }}
-            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
-              activeTab === "upcoming"
-                ? "bg-white text-blue-600 shadow-md"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            <CalendarCheck size={18} />
-            Upcoming
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("history");
-              setCurrentPage(1);
-            }}
-            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
-              activeTab === "history"
-                ? "bg-white text-blue-600 shadow-md"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            <History size={18} />
-            History
-          </button>
+        {/* Tabs */}
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl mt-6">
+          {[
+            { key: "upcoming", label: "Upcoming", icon: CalendarCheck },
+            { key: "history", label: "History", icon: History },
+            { key: "expired", label: "Expired", icon: ClockAlert },
+          ].map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => {
+                setActiveTab(key);
+                setCurrentPage(1);
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${
+                activeTab === key
+                  ? "bg-white text-blue-600 shadow"
+                  : "text-slate-500"
+              }`}
+            >
+              <Icon size={18} />
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Appointment List Section */}
+      {/* Appointment List */}
       <div className="space-y-6 min-h-[400px]">
         {currentAppointments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-100">
-            <div className="p-4 bg-slate-50 rounded-full mb-4">
-              <CalendarDays className="text-slate-300" size={40} />
-            </div>
-            <p className="text-slate-400 font-bold italic text-lg">
-              No {activeTab} sessions found
-            </p>
-            <p className="text-slate-400 text-sm">
-              Your scheduled visits will appear here.
+          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl ">
+            <CalendarDays className="text-slate-300 mb-4" size={40} />
+            <p className="text-slate-400 font-bold">
+              No {activeTab} appointments
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 animate-in fade-in duration-500">
+          <div className="grid gap-6">
             {currentAppointments.map((appt) => (
-              <AppointmentCard key={appt.id} data={appt} />
+              <AppointmentCard
+                key={appt.id}
+                data={appt}
+                showReschedule={activeTab === "upcoming"}
+                isExpired={activeTab === "expired"}
+                isHistory={activeTab === "history"}
+              />
             ))}
           </div>
         )}
       </div>
 
-      {/* Pagination & Summary Footer */}
-      {currentList.length > itemsPerPage && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white p-4 rounded-2xl border shadow-sm">
+          <p className="text-xs text-slate-400">
             Showing {startIndex + 1}–
             {Math.min(startIndex + itemsPerPage, currentList.length)} of{" "}
-            {currentList.length} Records
+            {currentList.length}
           </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className="p-2.5 rounded-xl border border-slate-100 text-slate-400 hover:bg-blue-600 hover:text-white disabled:opacity-20 transition-all"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft />
             </button>
-
-            <div className="flex gap-1">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
-                    currentPage === i + 1
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                      : "text-slate-400 hover:bg-slate-50"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="p-2.5 rounded-xl border border-slate-100 text-slate-400 hover:bg-blue-600 hover:text-white disabled:opacity-20 transition-all"
             >
-              <ChevronRight size={20} />
+              <ChevronRight />
             </button>
           </div>
         </div>

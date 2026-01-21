@@ -31,11 +31,14 @@ import BookingRequests from "./pages/doctor/BookingRequests";
 import PatientAppointment from "./pages/patient/PatientAppointment";
 import EmergencyRequests from "./pages/doctor/EmergencyRequests";
 import EmergencyRequestPatient from "./pages/patient/EmergencyRequestPatient";
+import { ToastContainer } from "react-toastify";
+import DoctorReview from "./pages/doctor/DoctorReview";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Navbar />
+      <ToastContainer />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<AuthRoleSelect />} />
@@ -73,6 +76,7 @@ export default function App() {
           <Route path="history" element={<AppointmentHistory />} />
           <Route path="booking-requests" element={<BookingRequests />} />
           <Route path="emergency-requests" element={<EmergencyRequests />} />
+          <Route path="reviews" element={<DoctorReview />} />
         </Route>
 
         <Route path="/doctor/set-password" element={<SetPassword />} />

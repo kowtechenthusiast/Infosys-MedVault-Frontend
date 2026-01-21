@@ -15,7 +15,6 @@ export default function PatientSidebar() {
   const { name, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  console.log("Patient Sidebar User:", user);
 
   const patientInfo = {
     name: name || user?.name || "Sarah Chen",
@@ -111,7 +110,7 @@ export default function PatientSidebar() {
       </div>
 
       {/* Logout */}
-      <div className="p-6 border-t">
+      <div className="p-6 ">
         <button
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 text-red-500 font-bold border border-red-100 rounded-xl py-3 hover:bg-red-50"

@@ -6,6 +6,7 @@ import HealthMetrics from "../../components/patient/profile/HealthMetrics";
 import MedicalRecords from "../../components/patient/profile/MedicalRecords";
 import AccountSettings from "../../components/patient/profile/AccountSettings";
 import SidebarTabs from "../../components/patient/profile/SidebarTabs";
+import { toast } from "react-toastify";
 
 export default function PatientProfile() {
   const patientId = localStorage.getItem("userId");
@@ -132,14 +133,14 @@ export default function PatientProfile() {
 
       if (res.ok) {
         setIsEditing(false);
-        alert("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
         // Optional: Re-fetch to get the new idProofPath
       } else {
-        alert("Update failed");
+        toast.error("Update failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Update failed");
+      toast.error("Error updating profile. Please try again.");
     }
   };
 

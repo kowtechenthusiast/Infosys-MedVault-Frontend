@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   X,
   Calendar,
@@ -8,6 +8,7 @@ import {
   Info,
   CheckCircle2,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const API = "http://localhost:8080";
 
@@ -73,10 +74,10 @@ export default function BookingModal({ doctor, onClose }) {
       });
 
       if (!res.ok) throw new Error("Booking failed");
-      alert("Mission Confirmed: Appointment Booked!");
+      toast.success("Appointment booked successfully");
       onClose();
     } catch (err) {
-      alert("Slot synchronization failed. Please select another timeline.");
+      toast.error("Booking failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +85,7 @@ export default function BookingModal({ doctor, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-[2rem] w-full max-w-[480px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-slate-200">
+      <div className="bg-white rounded-4xl w-full max-w-[480px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-slate-200">
         {/* Compact Clinical Header */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
@@ -131,7 +132,7 @@ export default function BookingModal({ doctor, onClose }) {
                   <button
                     key={dateISO}
                     onClick={() => setSelectedDate(dateISO)}
-                    className={`flex-shrink-0 w-16 py-4 rounded-2xl border-2 transition-all snap-start flex flex-col items-center gap-1 ${
+                    className={`shrink-0 w-16 py-4 rounded-2xl border-2 transition-all snap-start flex flex-col items-center gap-1 ${
                       isSelected
                         ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200"
                         : "bg-slate-50 border-transparent text-slate-500 hover:border-slate-200"
